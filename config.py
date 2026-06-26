@@ -1,22 +1,40 @@
 """
-Global configuration.
-
-Only edit this file when changing camera or stream settings.
+raspi-hud configuration
 """
 
-CAMERA_WIDTH = 1280
-CAMERA_HEIGHT = 720
-CAMERA_FPS = 30
+from dataclasses import dataclass
 
-STREAM_WIDTH = CAMERA_WIDTH
-STREAM_HEIGHT = CAMERA_HEIGHT
 
-BITRATE = 2000          # kbps
+VERSION = "0.1.0-dev"
 
-SRT_PORT = 9000
 
-LOG_LEVEL = "INFO"
+@dataclass(frozen=True)
+class CameraConfig:
 
-APP_NAME = "raspi-hud"
+    width: int = 1280
+    height: int = 720
+    fps: int = 30
 
-WINDOW_TITLE = "HUD Preview"
+
+@dataclass(frozen=True)
+class StreamConfig:
+
+    port: int = 9000
+
+    bitrate: int = 2000
+
+    keyframe_interval: int = 30
+
+
+@dataclass(frozen=True)
+class AppConfig:
+
+    camera: CameraConfig = CameraConfig()
+
+    stream: StreamConfig = StreamConfig()
+
+    log_level: str = "INFO"
+
+
+CONFIG = AppConfig()
+
