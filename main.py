@@ -4,25 +4,24 @@ raspi-hud
 Application entry point.
 """
 
-from config import CONFIG, VERSION
+from config import AppConfig, VERSION
+from gstpipeline import GstPipeline
 from util import get_logger
-
+from config import load_config
 
 def main() -> int:
-    """Application entry point."""
 
-    logger = get_logger("raspi-hud", CONFIG.log_level)
+    config = load_config()
 
-    logger.info("----------------------------------------")
+    logger = get_logger("raspi-hud", config.logging.level)
+
     logger.info("raspi-hud %s", VERSION)
-    logger.info("Initialising...")
-    logger.info("Camera : %dx%d @ %d FPS",
-                CONFIG.camera.width,
-                CONFIG.camera.height,
-                CONFIG.camera.fps)
-    logger.info("SRT Port : %d", CONFIG.stream.port)
-    logger.info("Ready.")
-    logger.info("----------------------------------------")
+
+    pipeline = GstPipeline(config)
+
+    pipeline.start()
+
+    pipeline.run()
 
     return 0
 
