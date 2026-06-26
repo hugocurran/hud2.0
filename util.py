@@ -1,8 +1,12 @@
+"""
+Logging helpers.
+"""
+
 import logging
 import sys
 
 
-def create_logger(name: str, level: str = "INFO") -> logging.Logger:
+def get_logger(name: str, level: str = "INFO") -> logging.Logger:
 
     logger = logging.getLogger(name)
 
@@ -16,8 +20,10 @@ def create_logger(name: str, level: str = "INFO") -> logging.Logger:
     )
 
     handler = logging.StreamHandler(sys.stdout)
+
     handler.setFormatter(formatter)
 
     logger.addHandler(handler)
 
     return logger
+
