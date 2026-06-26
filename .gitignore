@@ -1,0 +1,11 @@
+__pycache__/
+*.pyc
+
+.venv/
+
+logs/
+
+.vscode/settings.json
+
+*.swp
+
