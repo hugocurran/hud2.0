@@ -1,205 +1,105 @@
 """
-hudgeometry.py
+HUD geometry calculations.
 
-Geometry helper functions for the Raspberry Pi HUD.
-
-These functions perform coordinate transforms and generate HUD geometry.
-They do not perform any drawing.
+Contains no OpenCV drawing code.
 """
 
+from __future__ import annotations
+
+from dataclasses import dataclass
 import math
 
-
-# ----------------------------------------------------------------------
-# Basic geometry
-# ----------------------------------------------------------------------
-
-def rotate_point(x, y, angle_deg):
-    """
-    Rotate a point around the origin.
-
-    Parameters
-    ----------
-    x, y : float
-        Point coordinates.
-
-    angle_deg : float
-        Rotation angle in degrees.
-        Positive = clockwise (screen coordinates).
-
-    Returns
-    -------
-    (xr, yr)
-    """
-
-    angle = math.radians(angle_deg)
-
-    c = math.cos(angle)
-    s = math.sin(angle)
-
-    xr = x * c + y * s
-    yr = -x * s + y * c
-
-    return xr, yr
+from hudstyle import HudStyle
 
 
-def translate_point(x, y, dx, dy):
-    """
-    Translate a point.
-    """
-    return x + dx, y + dy
+@dataclass
+class Line:
+
+    p1: tuple[int, int]
+    p2: tuple[int, int]
 
 
-def rotate_translate_point(x, y, angle_deg, dx, dy):
-    """
-    Rotate around origin then translate.
-    """
-    xr, yr = rotate_point(x, y, angle_deg)
-    return xr + dx, yr + dy
+class HudGeometry:
 
+    def __init__(self, width: int, height: int):
 
-# ----------------------------------------------------------------------
-# HUD helpers
-# ----------------------------------------------------------------------
+        self.width = width
+        self.height = height
 
-def pitch_to_pixels(pitch_deg, pixels_per_degree):
-    """
-    Convert pitch angle into screen offset.
-    Positive pitch moves the horizon downward.
-    """
-    return pitch_deg * pixels_per_degree
+        self.cx = width // 2
+        self.cy = height // 2
 
+    def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
+        """
+        Return the current horizon line.
+        """
 
-def horizon_endpoints(width, cx, cy, roll_deg, horizon_length):
-    """
-    Generate horizon line endpoints.
+        roll = math.radians(roll_deg)
 
-    Returns:
-        (x1, y1), (x2, y2)
-    """
+        dx, dy = self._rotation(roll_deg)
 
-    half = horizon_length / 2
+        y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
 
-    left = (-half, 0)
-    right = (half, 0)
+        L = HudStyle.HORIZON_LENGTH
 
-    x1, y1 = rotate_translate_point(
-        left[0],
-        left[1],
-        roll_deg,
-        cx,
-        cy,
-    )
+        x1 = int(self.cx - dx * L)
+        y1 = int(y - dy * L)
 
-    x2, y2 = rotate_translate_point(
-        right[0],
-        right[1],
-        roll_deg,
-        cx,
-        cy,
-    )
+        x2 = int(self.cx + dx * L)
+        y2 = int(y + dy * L)
 
-    return (
-        int(x1),
-        int(y1),
-    ), (
-        int(x2),
-        int(y2),
-    )
+        return Line(
+            (x1, y1),
+            (x2, y2),
+        )
 
+    def pitch_mark(
+        self,
+        roll_deg: float,
+        aircraft_pitch: float,
+        mark_pitch: float,
+    ) -> Line:
+        """
+        Return one pitch ladder mark.
+        """
 
-# ----------------------------------------------------------------------
-# Pitch ladder
-# ----------------------------------------------------------------------
+        roll = math.radians(roll_deg)
 
-def pitch_mark(
-    pitch_deg,
-    aircraft_pitch_deg,
-    pixels_per_degree,
-):
-    """
-    Calculate vertical offset of one pitch mark.
+        dx, dy = self._rotation(roll_deg)
 
-    Returns pixel offset relative to screen centre.
-    """
+        nx = -dy
+        ny = dx
 
-    return (
-        pitch_deg - aircraft_pitch_deg
-    ) * pixels_per_degree
+        offset = (
+            mark_pitch - aircraft_pitch
+        ) * HudStyle.PITCH_SCALE
 
+        mx = self.cx + nx * offset
+        my = self.cy + ny * offset
 
-# ----------------------------------------------------------------------
-# Roll scale
-# ----------------------------------------------------------------------
+        half = (
+            HudStyle.PITCH_MAJOR_WIDTH
+            if mark_pitch % 10 == 0
+            else HudStyle.PITCH_MINOR_WIDTH
+        )
 
-def polar_to_cartesian(radius, angle_deg):
-    """
-    Convert polar coordinates into screen coordinates.
+        x1 = int(mx - dx * half)
+        y1 = int(my - dy * half)
 
-    0° = up
-    Positive clockwise.
-    """
+        x2 = int(mx + dx * half)
+        y2 = int(my + dy * half)
 
-    angle = math.radians(angle_deg)
+        return Line(
+            (x1, y1),
+            (x2, y2),
+        )
+    
+    def _rotation(self, roll_deg: float):
 
-    x = radius * math.sin(angle)
-    y = -radius * math.cos(angle)
+        roll = math.radians(roll_deg)
 
-    return x, y
-
-
-def roll_tick(cx, cy, radius, angle_deg, tick_length):
-    """
-    Generate one roll tick.
-
-    Returns:
-        ((x1,y1), (x2,y2))
-    """
-
-    ox, oy = polar_to_cartesian(radius, angle_deg)
-    ix, iy = polar_to_cartesian(radius - tick_length, angle_deg)
-
-    return (
-        int(cx + ox),
-        int(cy + oy),
-    ), (
-        int(cx + ix),
-        int(cy + iy),
-    )
-
-
-def roll_pointer(cx, cy, radius, height):
-    """
-    Fixed triangle pointer at top of roll scale.
-
-           ▲
-    """
-
-    top = (
-        cx,
-        cy - radius - height,
-    )
-
-    left = (
-        cx - height,
-        cy - radius,
-    )
-
-    right = (
-        cx + height,
-        cy - radius,
-    )
-
-    return top, left, right
-
-
-# ----------------------------------------------------------------------
-# Utility
-# ----------------------------------------------------------------------
-
-def screen_center(width, height):
-    """
-    Return integer screen centre.
-    """
-
-    return width // 2, height // 2
+        return (
+            math.cos(roll),
+            math.sin(roll),
+        )
+    
