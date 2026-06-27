@@ -1,5 +1,7 @@
 """
-Configuration management for raspi-hud.
+Configuration loading.
+
+Loads config.yaml into strongly typed dataclasses.
 """
 
 from __future__ import annotations
@@ -9,83 +11,66 @@ from pathlib import Path
 
 import yaml
 
-VERSION = "0.2.0-dev"
 
-
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Camera
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
-@dataclass(frozen=True)
+
+@dataclass(slots=True)
 class CameraConfig:
     width: int
     height: int
     fps: int
 
 
-# ----------------------------------------------------------------------
-# Streaming
-# ----------------------------------------------------------------------
-
-@dataclass(frozen=True)
-class StreamConfig:
-    host: str
-    port: int
-    bitrate: int
-    keyframe_interval: int
-    latency: int
+# ---------------------------------------------------------------------
+# Display
+# ---------------------------------------------------------------------
 
 
-# ----------------------------------------------------------------------
-# MAVLink
-# ----------------------------------------------------------------------
-
-@dataclass(frozen=True)
-class MavlinkConfig:
-    connection: str
+@dataclass(slots=True)
+class DisplayConfig:
+    enabled: bool
+    window_name: str
 
 
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Logging
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
-@dataclass(frozen=True)
+
+@dataclass(slots=True)
 class LoggingConfig:
     level: str
 
 
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Root configuration
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
-@dataclass(frozen=True)
-class AppConfig:
+
+@dataclass(slots=True)
+class Config:
     camera: CameraConfig
-    stream: StreamConfig
-    mavlink: MavlinkConfig
+    display: DisplayConfig
     logging: LoggingConfig
 
 
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 # Loader
-# ----------------------------------------------------------------------
+# ---------------------------------------------------------------------
 
-def load_config(filename: str = "config.yaml") -> AppConfig:
-    """
-    Load application configuration from YAML.
-    """
+
+def load_config(filename: str = "config.yaml") -> Config:
 
     path = Path(filename)
 
-    if not path.exists():
-        raise FileNotFoundError(path)
-
-    with path.open("r", encoding="utf-8") as f:
+    with path.open("r") as f:
         data = yaml.safe_load(f)
 
-    return AppConfig(
+    return Config(
         camera=CameraConfig(**data["camera"]),
-        stream=StreamConfig(**data["stream"]),
-        mavlink=MavlinkConfig(**data["mavlink"]),
+        display=DisplayConfig(**data["display"]),
         logging=LoggingConfig(**data["logging"]),
     )

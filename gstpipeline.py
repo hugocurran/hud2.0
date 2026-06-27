@@ -17,7 +17,7 @@ gi.require_version("GLib", "2.0")
 
 from gi.repository import Gst, GLib
 
-from config import AppConfig
+from config import Config
 from util import get_logger
 
 
@@ -26,7 +26,7 @@ Gst.init(None)
 
 class GstPipeline:
 
-    def __init__(self, config: AppConfig):
+    def __init__(self, config: Config):
 
         self.config = config
 

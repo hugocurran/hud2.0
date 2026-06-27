@@ -3,15 +3,9 @@ camera:
   height: 720
   fps: 30
 
-stream:
-  host: "0.0.0.0"
-  port: 9000
-  bitrate: 2000
-  keyframe_interval: 30
-  latency: 60
-
-mavlink:
-  connection: udp:127.0.0.1:14551
+display:
+  enabled: true
+  window_name: raspi-hud
 
 logging:
   level: INFO
