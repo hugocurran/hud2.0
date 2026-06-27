@@ -1,30 +1,78 @@
 """
-HUD drawing style.
+hudstyle.py
+
+Centralised HUD style definitions.
 """
 
 import cv2
 
+# ------------------------------------------------------------
+# Colours (BGR)
+# ------------------------------------------------------------
 
-class HudStyle:
+HUD_GREEN = (0, 255, 0)
+HUD_RED = (0, 0, 255)
+HUD_AMBER = (0, 200, 255)
+HUD_WHITE = (255, 255, 255)
 
-    # Colours
-    COLOUR = (0, 255, 0)
+# ------------------------------------------------------------
+# Fonts
+# ------------------------------------------------------------
 
-    # Lines
-    LINE_WIDTH = 2
+FONT = cv2.FONT_HERSHEY_SIMPLEX
 
-    # Font
-    FONT = cv2.FONT_HERSHEY_SIMPLEX
-    FONT_SCALE = 0.6
+FONT_SCALE_SMALL = 0.5
+FONT_SCALE_NORMAL = 0.7
+FONT_SCALE_LARGE = 1.0
 
-    # Geometry
-    PITCH_SCALE = 10.0          # pixels/degree
+TEXT_THICKNESS = 1
 
-    HORIZON_LENGTH = 3000
+# ------------------------------------------------------------
+# Line widths
+# ------------------------------------------------------------
 
-    PITCH_MAJOR_WIDTH = 60
-    PITCH_MINOR_WIDTH = 35
+LINE_THICKNESS = 2
+MAJOR_LINE_THICKNESS = 3
 
-    LADDER_HALF_WIDTH = 40
+# ------------------------------------------------------------
+# Aircraft Symbol
+# ------------------------------------------------------------
 
-    LADDER_SPACING = 5       # degrees
+AIRCRAFT_HALF_WIDTH = 20
+AIRCRAFT_WING_LENGTH = 40
+AIRCRAFT_CENTRE_GAP = 10
+
+# ------------------------------------------------------------
+# Horizon
+# ------------------------------------------------------------
+
+HORIZON_LENGTH = 2000
+
+# ------------------------------------------------------------
+# Pitch Ladder
+# ------------------------------------------------------------
+
+PITCH_SPACING = 12          # pixels per degree
+
+PITCH_MAJOR_LENGTH = 120
+PITCH_MINOR_LENGTH = 60
+
+PITCH_LABEL_OFFSET = 15
+
+# ------------------------------------------------------------
+# Roll Scale
+# ------------------------------------------------------------
+
+ROLL_RADIUS = 220
+
+ROLL_MAJOR_TICK = 18
+ROLL_MINOR_TICK = 10
+
+ROLL_POINTER_HEIGHT = 15
+
+# ------------------------------------------------------------
+# Status Overlay
+# ------------------------------------------------------------
+
+STATUS_MARGIN = 20
+STATUS_LINE_SPACING = 24

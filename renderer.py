@@ -69,14 +69,8 @@ class Renderer:
             state.pitch,
         )
 
-        cv2.line(
-            frame,
-            line.p1,
-            line.p2,
-            HudStyle.COLOUR,
-            HudStyle.LINE_WIDTH,
-            cv2.LINE_AA,
-        )
+        self.draw_line(frame, line)
+
 
     # ---------------------------------------------------------
 
@@ -93,14 +87,7 @@ class Renderer:
                 mark,
             )
 
-            cv2.line(
-                frame,
-                line.p1,
-                line.p2,
-                HudStyle.COLOUR,
-                HudStyle.LINE_WIDTH,
-                cv2.LINE_AA,
-            )
+        self.draw_line(frame, line)
 
     # ---------------------------------------------------------
 
@@ -187,6 +174,19 @@ class Renderer:
             y += 26
 
     # ---------------------------------------------------------
+    # ---------------------------------------------------------
+
+    def draw_line(self, frame, line):
+
+        cv2.line(
+            frame,
+            line.p1,
+            line.p2,
+            HudStyle.COLOUR,
+            HudStyle.LINE_WIDTH,
+            cv2.LINE_AA,
+        )
+
 
     def draw_frame_counter(self, frame):
 
