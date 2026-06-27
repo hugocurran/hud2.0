@@ -4,27 +4,54 @@ raspi-hud
 Application entry point.
 """
 
-from config import AppConfig, VERSION
-from gstpipeline import GstPipeline
-from util import get_logger
-from config import load_config
+import signal
+import sys
+import cv2
 
-def main() -> int:
+from config import load_config
+from gstpipeline import GstPipeline
+from renderer import Renderer
+from util import get_logger
+
+logger = get_logger(__name__)
+
+
+def main():
 
     config = load_config()
 
-    logger = get_logger("raspi-hud", config.logging.level)
-
-    logger.info("raspi-hud %s", VERSION)
-
     pipeline = GstPipeline(config)
+    renderer = Renderer()
 
     pipeline.start()
 
-    pipeline.run()
+    logger.info("Pipeline started")
 
-    return 0
+    try:
+        while True:
+
+            frame = pipeline.get_frame()
+
+            if frame is None:
+                continue
+
+            frame = renderer.process(frame)
+
+            cv2.imshow("raspi-hud", frame)
+
+            key = cv2.waitKey(1)
+
+            if key == 27:      # ESC
+                break
+
+    except KeyboardInterrupt:
+        logger.info("Interrupted")
+
+    finally:
+        pipeline.stop()
+        cv2.destroyAllWindows()
+        logger.info("Stopped")
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    main()

@@ -28,4 +28,17 @@ Pipeline Manager
       └── Telemetry
              │
              ▼
-         HUD Renderer                          
+         HUD Renderer                   
+
+                   main.py
+                     │
+     +---------------+---------------+
+     |                               |
+     |                               |
+ Renderer                    GstPipeline
+     |                               |
+     |                       appsink callback
+     |                               |
+     |                       Queue(maxsize=1)
+     |                               |
+     +---------- get_frame() <--------+               

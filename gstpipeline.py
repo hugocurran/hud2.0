@@ -10,6 +10,7 @@ import cv2
 import numpy as np
 
 import gi
+import queue
 
 gi.require_version("Gst", "1.0")
 gi.require_version("GLib", "2.0")
@@ -35,8 +36,6 @@ class GstPipeline:
 
         self.pipeline = Gst.Pipeline.new("raspi-hud")
 
-        self.frame_callback = None
-
         self.frame_count = 0
 
         self.running = False
@@ -46,6 +45,8 @@ class GstPipeline:
         self._build_pipeline()
 
         self._connect_bus()
+
+        self.frame_queue = queue.Queue(maxsize=1)
 
     def set_frame_callback(self, callback):
 
@@ -68,6 +69,7 @@ class GstPipeline:
         self.running = False
 
         self.pipeline.set_state(Gst.State.NULL)
+        cv2.destroyAllWindows()
 
 
     def run(self):
@@ -83,6 +85,14 @@ class GstPipeline:
         finally:
 
             self.stop()
+            cv2.destroyAllWindows()
+
+    def get_frame(self):
+
+        try:
+            return self.frame_queue.get_nowait()
+        except queue.Empty:
+            return None
 
     def _build_pipeline(self):
 
@@ -148,20 +158,18 @@ class GstPipeline:
                 (height, width, 3),
                 dtype=np.uint8,
                 buffer=mapinfo.data,
-            )
+            ).copy()
 
-            if self.frame_callback:
+            try:
+                self.frame_queue.put_nowait(frame)
+            except queue.Full:
+            # Drop the oldest frame and replace it
+                try:
+                    self.frame_queue.get_nowait()
+                except queue.Empty:
+                    pass
 
-                frame = self.frame_callback(frame)
-
-            self.frame_count += 1
-
-            if self.frame_count % 100 == 0:
-
-                self.logger.info(
-                    "Frames: %d",
-                    self.frame_count,
-                )
+                self.frame_queue.put_nowait(frame)
 
         finally:
 
