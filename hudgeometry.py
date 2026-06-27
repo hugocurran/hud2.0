@@ -1,0 +1,98 @@
+"""
+HUD geometry calculations.
+
+Contains no OpenCV drawing code.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass
+import math
+
+from hudstyle import HudStyle
+
+
+@dataclass
+class Line:
+
+    p1: tuple[int, int]
+    p2: tuple[int, int]
+
+
+class HudGeometry:
+
+    def __init__(self, width: int, height: int):
+
+        self.width = width
+        self.height = height
+
+        self.cx = width // 2
+        self.cy = height // 2
+
+    def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
+        """
+        Return the current horizon line.
+        """
+
+        roll = math.radians(roll_deg)
+
+        dx = math.cos(roll)
+        dy = math.sin(roll)
+
+        y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
+
+        L = HudStyle.HORIZON_LENGTH
+
+        x1 = int(self.cx - dx * L)
+        y1 = int(y - dy * L)
+
+        x2 = int(self.cx + dx * L)
+        y2 = int(y + dy * L)
+
+        return Line(
+            (x1, y1),
+            (x2, y2),
+        )
+
+    def pitch_mark(
+        self,
+        roll_deg: float,
+        aircraft_pitch: float,
+        mark_pitch: float,
+    ) -> Line:
+        """
+        Return one pitch ladder mark.
+        """
+
+        roll = math.radians(roll_deg)
+
+        dx = math.cos(roll)
+        dy = math.sin(roll)
+
+        nx = -dy
+        ny = dx
+
+        offset = (
+            mark_pitch - aircraft_pitch
+        ) * HudStyle.PITCH_SCALE
+
+        mx = self.cx + nx * offset
+        my = self.cy + ny * offset
+
+        half = (
+            HudStyle.PITCH_MAJOR_WIDTH
+            if mark_pitch % 10 == 0
+            else HudStyle.PITCH_MINOR_WIDTH
+        )
+
+        x1 = int(mx - dx * half)
+        y1 = int(my - dy * half)
+
+        x2 = int(mx + dx * half)
+        y2 = int(my + dy * half)
+
+        return Line(
+            (x1, y1),
+            (x2, y2),
+        )
+    
