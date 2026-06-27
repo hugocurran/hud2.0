@@ -63,12 +63,9 @@ class HudGeometry:
         Return one pitch ladder mark.
         """
 
-        roll = math.radians(roll_deg)
-
         dx, dy = self._rotation(roll_deg)
 
-        nx = -dy
-        ny = dx
+        nx, ny = self._normal(dx, dy)
 
         offset = (
             mark_pitch - aircraft_pitch
@@ -102,4 +99,8 @@ class HudGeometry:
             math.cos(roll),
             math.sin(roll),
         )
+    
+    def _normal(self, dx, dy):
+
+        return -dy, dx
     
