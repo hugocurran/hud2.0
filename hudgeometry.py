@@ -99,7 +99,7 @@ class HudGeometry:
             (x2, y2),
         )
     
-    def roll_ticks(self) -> list[RollTick]:
+    def roll_ticks(self, roll_deg: float) -> list[RollTick]:
 
         ticks = []
 
@@ -113,7 +113,7 @@ class HudGeometry:
                 else HudStyle.ROLL_MINOR_TICK
             )
 
-            radians = math.radians(angle)
+            radians = math.radians(angle + roll_deg)
 
             sx = math.sin(radians)
             cy = math.cos(radians)

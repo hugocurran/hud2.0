@@ -52,7 +52,7 @@ class Renderer:
 
         self.draw_pitch_ladder(frame, state)
 
-        self.draw_roll_scale(frame)
+        self.draw_roll_scale(frame, state)
 
         self.draw_aircraft_symbol(frame)
 
@@ -204,8 +204,8 @@ class Renderer:
             cv2.LINE_AA,
         )
 
-    def draw_roll_scale(self, frame):
+    def draw_roll_scale(self, frame, state):
 
-        for tick in self.geometry.roll_ticks():
+        for tick in self.geometry.roll_ticks(state.roll):
 
             self.draw_line(frame, tick)
