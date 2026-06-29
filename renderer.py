@@ -94,6 +94,25 @@ class Renderer:
             # print (line)
             self.draw_line(frame, pitch)
 
+            # End caps
+            cv2.line(
+                frame,
+                pitch.p1,
+                pitch.left_cap,
+                HudStyle.COLOUR,
+                HudStyle.LINE_WIDTH,
+                cv2.LINE_AA,
+            )
+
+            cv2.line(
+                frame,
+                pitch.p2,
+                pitch.right_cap,
+                HudStyle.COLOUR,
+                HudStyle.LINE_WIDTH,
+                cv2.LINE_AA,
+            )
+
             if mark % 10 == 0:
 
                 text = str(abs(mark))

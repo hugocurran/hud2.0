@@ -24,6 +24,9 @@ class PitchMark:
     p1: tuple[int, int]
     p2: tuple[int, int]
 
+    left_cap: tuple[int, int]
+    right_cap: tuple[int, int]
+
     left_text: tuple[int, int]
     right_text: tuple[int, int]
 
@@ -103,11 +106,25 @@ class HudGeometry:
             else HudStyle.PITCH_MINOR_WIDTH
         )
 
+        cap = HudStyle.PITCH_CAP_LENGTH
+
         x1 = int(mx - dx * half)
         y1 = int(my - dy * half)
 
         x2 = int(mx + dx * half)
         y2 = int(my + dy * half)
+
+        cap = HudStyle.PITCH_CAP_LENGTH
+
+        left_cap = (
+            int(x1 + nx * cap),
+            int(y1 + ny * cap),
+        )
+
+        right_cap = (
+            int(x2 + nx * cap),
+            int(y2 + ny * cap),
+        )
 
         offset = HudStyle.PITCH_LABEL_OFFSET
 
@@ -124,6 +141,8 @@ class HudGeometry:
         return PitchMark(
             (x1, y1),
             (x2, y2),
+            left_cap,
+            right_cap, 
             left_text,
             right_text,
             mark_pitch,

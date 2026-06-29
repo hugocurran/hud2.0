@@ -41,6 +41,7 @@ class HudStyle:
     PITCH_LABEL_OFFSET = 15
     PITCH_LABEL_FONT_SCALE = 0.5
     PITCH_LABEL_THICKNESS = 1
+    PITCH_CAP_LENGTH = 8
 
     # ------------------------------------------------------------
     # Aircraft Symbol
