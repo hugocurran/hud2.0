@@ -19,6 +19,17 @@ class Line:
     p2: tuple[int, int]
 
 @dataclass
+class PitchMark:
+
+    p1: tuple[int, int]
+    p2: tuple[int, int]
+
+    left_text: tuple[int, int]
+    right_text: tuple[int, int]
+
+    value: int
+
+@dataclass
 class RollTick:
 
     p1: tuple[int, int]
@@ -98,9 +109,24 @@ class HudGeometry:
         x2 = int(mx + dx * half)
         y2 = int(my + dy * half)
 
-        return Line(
+        offset = HudStyle.PITCH_LABEL_OFFSET
+
+        left_text = (
+            int(x1 - dx * offset),
+            int(y1 - dy * offset),
+        )
+
+        right_text = (
+            int(x2 + dx * offset),
+            int(y2 + dy * offset),
+        )
+
+        return PitchMark(
             (x1, y1),
             (x2, y2),
+            left_text,
+            right_text,
+            mark_pitch,
         )
     
     def roll_ticks(self, roll_deg: float) -> list[RollTick]:

@@ -85,14 +85,54 @@ class Renderer:
             if mark == 0:
                 continue
 
-            line = self.geometry.pitch_mark(
+            pitch = self.geometry.pitch_mark(
                 state.roll,
                 state.pitch,
                 mark,
             )
 
             # print (line)
-            self.draw_line(frame, line)
+            self.draw_line(frame, pitch)
+
+            if mark % 10 == 0:
+
+                text = str(abs(mark))
+
+                (text_width, text_height), _ = cv2.getTextSize(
+                    text,
+                    HudStyle.FONT,
+                    HudStyle.PITCH_LABEL_FONT_SCALE,
+                    HudStyle.PITCH_LABEL_THICKNESS,
+)
+
+                left_pos = (
+                    pitch.left_text[0] - text_width,
+                    pitch.left_text[1],
+                )
+
+                right_pos = pitch.right_text
+
+                cv2.putText(
+                    frame,
+                    text,
+                    left_pos,
+                    HudStyle.FONT,
+                    HudStyle.PITCH_LABEL_FONT_SCALE,
+                    HudStyle.COLOUR,
+                    HudStyle.PITCH_LABEL_THICKNESS,
+                cv2.LINE_AA,
+                )
+
+                cv2.putText(
+                    frame,
+                    text,
+                    right_pos,
+                    HudStyle.FONT,
+                    HudStyle.PITCH_LABEL_FONT_SCALE,
+                    HudStyle.COLOUR,
+                    HudStyle.PITCH_LABEL_THICKNESS,
+                    cv2.LINE_AA,
+                )
 
     # ---------------------------------------------------------
 

@@ -38,6 +38,10 @@ class HudStyle:
 
     LADDER_SPACING = 5
 
+    PITCH_LABEL_OFFSET = 15
+    PITCH_LABEL_FONT_SCALE = 0.5
+    PITCH_LABEL_THICKNESS = 1
+
     # ------------------------------------------------------------
     # Aircraft Symbol
     # ------------------------------------------------------------
