@@ -12,7 +12,6 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
-from telemetry import Telemetry
 from hudstyle import HudStyle
 from hudgeometry import HudGeometry
 
@@ -21,19 +20,19 @@ class Renderer:
 
     def __init__(self):
 
-        self.telemetry = Telemetry()
-
         self.geometry = None
 
         self.frame_counter = 0
 
     # ---------------------------------------------------------
 
-    def process(self, frame: np.ndarray) -> np.ndarray:
+    def process(
+            self,
+            frame: np.ndarray,
+            state,
+            ) -> np.ndarray:
 
         self.frame_counter += 1
-
-        state = self.telemetry.get()
 
         h, w = frame.shape[:2]
 

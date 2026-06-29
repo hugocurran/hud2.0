@@ -12,6 +12,7 @@ from config import load_config
 from gstpipeline import GstPipeline
 from renderer import Renderer
 from util import get_logger
+from telemetry import Telemetry
 
 logger = get_logger(__name__)
 
@@ -22,10 +23,20 @@ def main():
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
+    telemetry = Telemetry()
 
     pipeline.start()
 
     logger.info("Pipeline started")
+    
+    #if config.mavlink.source == "simulator":
+    #    telemetry = SimulatorSource()
+    #
+    #elif config.mavlink.source == "pymavlink":
+    #    telemetry = MavlinkSource(
+    #       config.mavlink.connection,
+    #       config.mavlink.baudrate,
+    #   )
 
     try:
         while True:
@@ -35,7 +46,9 @@ def main():
             if frame is None:
                 continue
 
-            frame = renderer.process(frame)
+            state = telemetry.get()
+
+            frame = renderer.process(frame, state)
 
             cv2.imshow("raspi-hud", frame)
 
