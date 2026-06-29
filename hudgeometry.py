@@ -23,7 +23,11 @@ class RollTick:
 
     p1: tuple[int, int]
     p2: tuple[int, int]
-    angle: float
+
+    text: tuple[int, int]
+
+    angle: int
+
     major: bool
 
 
@@ -124,10 +128,19 @@ class HudGeometry:
             x2 = int(self.cx + sx * (HudStyle.ROLL_RADIUS - length))
             y2 = int(self.cy - cy * (HudStyle.ROLL_RADIUS - length))
 
+            label_radius = (
+                HudStyle.ROLL_RADIUS 
+                + HudStyle.ROLL_LABEL_OFFSET
+            )
+
+            tx = int(self.cx + sx * label_radius)
+            ty = int(self.cy - cy * label_radius)
+
             ticks.append(
                 RollTick(
                     (x1, y1),
                     (x2, y2),
+                    (tx, ty),
                     angle,
                     major,
                 )

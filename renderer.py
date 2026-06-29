@@ -91,7 +91,7 @@ class Renderer:
                 mark,
             )
 
-            print (line)
+            # print (line)
             self.draw_line(frame, line)
 
     # ---------------------------------------------------------
@@ -211,6 +211,20 @@ class Renderer:
         for tick in self.geometry.roll_ticks(state.roll):
 
             self.draw_line(frame, tick)
+
+            if tick.major:
+
+                 cv2.putText(
+                      frame,
+                      str(abs(tick.angle)),
+                      tick.text,
+                      HudStyle.FONT,
+                      HudStyle.ROLL_LABEL_FONT_SCALE,
+                      HudStyle.COLOUR,
+                      HudStyle.ROLL_LABEL_THICKNESS,
+                      cv2.LINE_AA,
+                 )
+                
 
     def draw_roll_pointer(self, frame):
 

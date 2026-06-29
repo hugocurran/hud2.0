@@ -58,6 +58,10 @@ class HudStyle:
     ROLL_POINTER_SIZE = 14
     ROLL_POINTER_OFFSET = 8
 
+    ROLL_LABEL_FONT_SCALE = 0.5
+    ROLL_LABEL_THICKNESS = 1 
+    ROLL_LABEL_OFFSET = 20
+
     # ------------------------------------------------------------
     # Status Overlay
     # ------------------------------------------------------------
