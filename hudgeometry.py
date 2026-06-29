@@ -18,6 +18,14 @@ class Line:
     p1: tuple[int, int]
     p2: tuple[int, int]
 
+@dataclass
+class RollTick:
+
+    p1: tuple[int, int]
+    p2: tuple[int, int]
+    angle: float
+    major: bool
+
 
 class HudGeometry:
 
@@ -90,6 +98,42 @@ class HudGeometry:
             (x1, y1),
             (x2, y2),
         )
+    
+    def roll_ticks(self) -> list[RollTick]:
+
+        ticks = []
+
+        for angle in (-60, -45, -30, -20, -10, 10, 20, 30, 45, 60):
+
+            major = angle in (-60, -30, 30, 60)
+
+            length = (
+                HudStyle.ROLL_MAJOR_TICK
+                if major
+                else HudStyle.ROLL_MINOR_TICK
+            )
+
+            radians = math.radians(angle)
+
+            sx = math.sin(radians)
+            cy = math.cos(radians)
+
+            x1 = int(self.cx + sx * HudStyle.ROLL_RADIUS)
+            y1 = int(self.cy - cy * HudStyle.ROLL_RADIUS)
+
+            x2 = int(self.cx + sx * (HudStyle.ROLL_RADIUS - length))
+            y2 = int(self.cy - cy * (HudStyle.ROLL_RADIUS - length))
+
+            ticks.append(
+                RollTick(
+                    (x1, y1),
+                    (x2, y2),
+                    angle,
+                    major,
+                )
+            )
+
+        return ticks
     
     def _rotation(self, roll_deg: float):
 
