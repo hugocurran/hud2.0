@@ -54,6 +54,8 @@ class Renderer:
 
         self.draw_roll_scale(frame, state)
 
+        self.draw_roll_pointer(frame)
+
         self.draw_aircraft_symbol(frame)
 
         self.draw_status(frame, state)
@@ -209,3 +211,18 @@ class Renderer:
         for tick in self.geometry.roll_ticks(state.roll):
 
             self.draw_line(frame, tick)
+
+    def draw_roll_pointer(self, frame):
+
+        points = np.array(
+            self.geometry.roll_pointer(),
+            dtype=np.int32,
+        )
+
+        cv2.fillConvexPoly(
+            frame,
+            points,
+            HudStyle.COLOUR,
+            cv2.LINE_AA,
+        )
+

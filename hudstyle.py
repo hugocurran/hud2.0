@@ -51,9 +51,12 @@ class HudStyle:
     # ------------------------------------------------------------
 
     ROLL_RADIUS = 220
+
     ROLL_MAJOR_TICK = 18
     ROLL_MINOR_TICK = 10
+
     ROLL_POINTER_SIZE = 14
+    ROLL_POINTER_OFFSET = 8
 
     # ------------------------------------------------------------
     # Status Overlay

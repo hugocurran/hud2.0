@@ -135,6 +135,37 @@ class HudGeometry:
 
         return ticks
     
+    def roll_pointer(self):
+
+        size = HudStyle.ROLL_POINTER_SIZE
+
+        base_y = (
+            self.cy
+            - HudStyle.ROLL_RADIUS
+            + HudStyle.ROLL_POINTER_OFFSET
+        )
+
+        tip = (
+            self.cx,
+            base_y,
+        )
+
+        left = (
+            self.cx - size,
+            base_y + size,
+        )
+
+        right = (
+            self.cx + size,
+            base_y + size,
+        )
+
+        return (
+            tip,
+            left,
+            right,
+        )
+        
     def _rotation(self, roll_deg: float):
 
         roll = math.radians(roll_deg)
