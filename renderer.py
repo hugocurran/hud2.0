@@ -87,7 +87,8 @@ class Renderer:
                 mark,
             )
 
-        self.draw_line(frame, line)
+            print (line)
+            self.draw_line(frame, line)
 
     # ---------------------------------------------------------
 

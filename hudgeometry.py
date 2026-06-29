@@ -144,7 +144,6 @@ class HudGeometry:
             math.sin(roll),
         )
     
-    def _normal(self, dx, dy):
-
+    def _normal(self, dx: float, dy: float) -> tuple[float, float]:
         return -dy, dx
     
