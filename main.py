@@ -13,6 +13,8 @@ from gstpipeline import GstPipeline
 from renderer import Renderer
 from util import get_logger
 from telemetry import Telemetry
+from simulatorsource import SimulatorSource
+
 
 logger = get_logger(__name__)
 
@@ -23,7 +25,7 @@ def main():
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
-    telemetry = Telemetry()
+    telemetry = SimulatorSource()
 
     pipeline.start()
 
