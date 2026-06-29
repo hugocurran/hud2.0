@@ -55,7 +55,14 @@ class Config:
     camera: CameraConfig
     display: DisplayConfig
     logging: LoggingConfig
+    mavlink: MavlinkConfig
 
+
+@dataclass(slots=True)
+class MavlinkConfig:
+    connection: str
+    baudrate: int
+    source: str
 
 # ---------------------------------------------------------------------
 # Loader
@@ -73,4 +80,5 @@ def load_config(filename: str = "config.yaml") -> Config:
         camera=CameraConfig(**data["camera"]),
         display=DisplayConfig(**data["display"]),
         logging=LoggingConfig(**data["logging"]),
+        mavlink=MavlinkConfig(**data["mavlink"]),
     )

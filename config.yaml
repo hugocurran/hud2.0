@@ -9,3 +9,8 @@ display:
 
 logging:
   level: INFO
+
+mavlink:
+  connection: "/dev/serial0"
+  baudrate: 57600
+  source: "pymavlink"
