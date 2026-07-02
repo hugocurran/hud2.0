@@ -9,3 +9,8 @@ logs/
 
 *.swp
 
+mav.parm
+mav.tlog
+mavtlog.raw
+
+

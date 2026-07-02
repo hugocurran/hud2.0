@@ -11,6 +11,6 @@ logging:
   level: INFO
 
 mavlink:
-  connection: "/dev/serial0"
+  connection: udp:127.0.0.1:14550
   baudrate: 57600
   source: "pymavlink"

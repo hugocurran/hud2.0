@@ -66,11 +66,6 @@ class MavlinkSource(TelemetrySource):
                     math.degrees(msg.yaw) + 360.0
                 ) % 360.0
             
-            print(
-                f"ATT {self.state.roll:.1f} "
-                f"{self.state.pitch:.1f} "
-            )
-
         return self.state
 
         
