@@ -115,3 +115,28 @@ HUD Design
         |         +            |
         |                      |
         +----------------------+
+
+
+
+
+                            Main Thread
+                    ===========
+Camera --> GstPipeline --> Renderer
+                           ▲
+                           │
+                    get_state()
+                           │
+                    TelemetryManager
+                     (owns state)
+                           ▲
+                           │ Lock
+                           ▼
+                 Telemetry Worker Thread
+                           │
+                    update_state()
+                           │
+                    MavlinkSource
+                           │
+                       Pixhawk
+
+                       

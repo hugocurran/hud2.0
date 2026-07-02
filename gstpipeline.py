@@ -32,8 +32,6 @@ class GstPipeline:
 
         self.logger = get_logger("pipeline", config.logging.level)
 
-        #self.loop = GLib.MainLoop()
-
         self.pipeline = Gst.Pipeline.new("raspi-hud")
 
         self.frame_count = 0
@@ -68,26 +66,19 @@ class GstPipeline:
 
         self.running = False
 
+
+
         print("before null")
+        state_change, current, pending = self.pipeline.get_state(0)
+
+        print(
+            f"Current={current.value_nick} "
+            f"Pending={pending.value_nick}"
+        )
         self.pipeline.set_state(Gst.State.NULL)
         print("after null")
         cv2.destroyAllWindows()
 
-
-    #def run(self):
-
-    #    try:
-
-    #        self.loop.run()
-
-    #    except KeyboardInterrupt:
-
-     #       pass
-
-     #   finally:
-
-     #       self.stop()
-    #        cv2.destroyAllWindows()
 
     def get_frame(self):
 
@@ -202,11 +193,8 @@ class GstPipeline:
 
                 self.logger.error(dbg)
 
-            ##self.loop.quit()
-
         elif t == Gst.MessageType.EOS:
 
             self.logger.info("End of stream")
 
-            #self.loop.quit()
                            
