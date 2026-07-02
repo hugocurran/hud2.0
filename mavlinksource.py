@@ -7,11 +7,12 @@ import math
 import time
 
 from pymavlink import mavutil
+from telemetrysource import TelemetrySource
 from telemetry import TelemetryState
 from collections import Counter
 
 
-class MavlinkSource:
+class MavlinkSource(TelemetrySource):
 
     def __init__(self, connection: str, baudrate: int):
 
@@ -46,7 +47,7 @@ class MavlinkSource:
         )
 
 
-    def get(self):
+    def get_state(self) -> TelemetryState:
 
         while True:
 

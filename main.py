@@ -44,9 +44,7 @@ def main():
             if frame is None:
                 continue
 
-            state = telemetry.get()
-            print("got state", flush=True)
-
+            state = telemetry.get_state()
           
             frame = renderer.process(frame, state)
 
