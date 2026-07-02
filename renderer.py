@@ -32,6 +32,8 @@ class Renderer:
             state,
             ) -> np.ndarray:
 
+        print(state.roll)
+        
         self.frame_counter += 1
 
         h, w = frame.shape[:2]

@@ -7,6 +7,7 @@ Application entry point.
 import signal
 import sys
 import cv2
+import time
 
 from config import load_config
 from gstpipeline import GstPipeline
@@ -14,6 +15,7 @@ from renderer import Renderer
 from util import get_logger
 from telemetry import Telemetry
 from simulatorsource import SimulatorSource
+from mavlinksource import MavlinkSource
 
 
 logger = get_logger(__name__)
@@ -25,21 +27,15 @@ def main():
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
-    telemetry = SimulatorSource()
+    telemetry = MavlinkSource(
+        config.mavlink.connection,
+        config.mavlink.baudrate,
+    )
 
     pipeline.start()
 
     logger.info("Pipeline started")
     
-    #if config.mavlink.source == "simulator":
-    #    telemetry = SimulatorSource()
-    #
-    #elif config.mavlink.source == "pymavlink":
-    #    telemetry = MavlinkSource(
-    #       config.mavlink.connection,
-    #       config.mavlink.baudrate,
-    #   )
-
     try:
         while True:
 
@@ -49,14 +45,14 @@ def main():
                 continue
 
             state = telemetry.get()
+            print("got state", flush=True)
 
+          
             frame = renderer.process(frame, state)
 
             cv2.imshow("raspi-hud", frame)
-
-            key = cv2.waitKey(1)
-
-            if key == 27:      # ESC
+            
+            if cv2.waitKey(1) == 27:      # ESC
                 break
 
     except KeyboardInterrupt:
