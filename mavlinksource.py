@@ -10,15 +10,13 @@ from pymavlink import mavutil
 from telemetrysource import TelemetrySource
 from telemetry import TelemetryState
 from collections import Counter
+from collections.abc import Callable
 
 
 class MavlinkSource(TelemetrySource):
 
     def __init__(self, connection: str, baudrate: int):
 
-        self.state = TelemetryState()
-        self.last_update = time.monotonic()
-        self.badcount =0
         self.stats = Counter()  
 
         print(f"Connecting to {connection}...")
@@ -46,8 +44,17 @@ class MavlinkSource(TelemetrySource):
             f"component={self.master.target_component})"
         )
 
+        self._handlers: dict[
+            str,
+            Callable[[object, TelemetryState], None],
+        ] = {
+            "ATTITUDE": self._handle_attitude,
+        }
 
-    def get_state(self) -> TelemetryState:
+    def update_state(
+        self,
+        state: TelemetryState,
+    ) -> None:
 
         while True:
 
@@ -59,13 +66,23 @@ class MavlinkSource(TelemetrySource):
             if msg.get_type() == "BAD_DATA":
                 continue
 
-            if msg.get_type() == "ATTITUDE":
-                self.state.roll = math.degrees(msg.roll)
-                self.state.pitch = math.degrees(msg.pitch)
-                self.state.heading = (
-                    math.degrees(msg.yaw) + 360.0
-                ) % 360.0
+            handler = self._handlers.get(msg.get_type())
+
+            if handler is not None:
+                handler(msg, state)
             
-        return self.state
+    def _handle_attitude(
+        self,
+        msg,
+        state: TelemetryState,
+    ) -> None:
+
+        state.roll = math.degrees(msg.roll)
+        state.pitch = math.degrees(msg.pitch)
+        state.heading = (
+            math.degrees(msg.yaw) + 360
+        ) % 360
+
+        state.last_update = time.monotonic()
 
         

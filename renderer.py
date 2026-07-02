@@ -121,7 +121,7 @@ class Renderer:
                     HudStyle.FONT,
                     HudStyle.PITCH_LABEL_FONT_SCALE,
                     HudStyle.PITCH_LABEL_THICKNESS,
-)
+            )               
 
                 left_pos = (
                     pitch.left_text[0] - text_width,
@@ -218,7 +218,11 @@ class Renderer:
 
             f"Altitude {state.altitude:7.1f} m",
 
-            f"Battery  {state.battery_percent:3d} %",
+            (
+                f"Battery {state.battery_remaining:3d} %"
+                if state.battery_remaining is not None
+                else "Battery --- %"
+            ),
         ]
 
         for text in lines:
