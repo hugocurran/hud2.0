@@ -4,17 +4,13 @@ raspi-hud
 Application entry point.
 """
 
-import signal
-import sys
 import cv2
-import time
 
 from config import load_config
 from gstpipeline import GstPipeline
 from renderer import Renderer
+from telemetrymanager import TelemetryManager
 from util import get_logger
-from telemetry import Telemetry
-from simulatorsource import SimulatorSource
 from mavlinksource import MavlinkSource
 
 
@@ -27,11 +23,14 @@ def main():
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
-    telemetry = MavlinkSource(
+    
+    source = MavlinkSource(
         config.mavlink.connection,
         config.mavlink.baudrate,
     )
 
+    telemetry = TelemetryManager(source)
+    telemetry.start()
     pipeline.start()
 
     logger.info("Pipeline started")
@@ -57,8 +56,13 @@ def main():
         logger.info("Interrupted")
 
     finally:
+        print("A")
+        telemetry.stop()
+        print("B")
         pipeline.stop()
+        print("C")
         cv2.destroyAllWindows()
+        print("D")
         logger.info("Stopped")
 
 

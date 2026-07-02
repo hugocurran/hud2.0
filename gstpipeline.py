@@ -32,7 +32,7 @@ class GstPipeline:
 
         self.logger = get_logger("pipeline", config.logging.level)
 
-        self.loop = GLib.MainLoop()
+        #self.loop = GLib.MainLoop()
 
         self.pipeline = Gst.Pipeline.new("raspi-hud")
 
@@ -68,24 +68,26 @@ class GstPipeline:
 
         self.running = False
 
+        print("before null")
         self.pipeline.set_state(Gst.State.NULL)
+        print("after null")
         cv2.destroyAllWindows()
 
 
-    def run(self):
+    #def run(self):
 
-        try:
+    #    try:
 
-            self.loop.run()
+    #        self.loop.run()
 
-        except KeyboardInterrupt:
+    #    except KeyboardInterrupt:
 
-            pass
+     #       pass
 
-        finally:
+     #   finally:
 
-            self.stop()
-            cv2.destroyAllWindows()
+     #       self.stop()
+    #        cv2.destroyAllWindows()
 
     def get_frame(self):
 
@@ -186,7 +188,7 @@ class GstPipeline:
         bus.connect("message", self._on_bus_message)
 
 
-    def _on_bus_message(self, bus, message):
+    def _on_bus_message(self, _bus, message):
 
         t = message.type
 
@@ -200,11 +202,11 @@ class GstPipeline:
 
                 self.logger.error(dbg)
 
-            self.loop.quit()
+            ##self.loop.quit()
 
         elif t == Gst.MessageType.EOS:
 
             self.logger.info("End of stream")
 
-            self.loop.quit()
+            #self.loop.quit()
                            
