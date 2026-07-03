@@ -67,23 +67,23 @@ class TelemetryState:
     last_update: float = 0.0
 
 
-class Telemetry:
+# class Telemetry:
 
-    def __init__(self):
+#     def __init__(self):
 
-        self.state = TelemetryState()
+#         self.state = TelemetryState()
 
-    def update(self):
+#     def update(self):
 
-        t = time.time()
+#         t = time.time()
 
-        self.state.roll = 30.0 * math.sin(t * 0.5)
-        self.state.pitch = 15.0 * math.sin(t * 0.35)
-        self.state.heading = (t * 10.0) % 360.0
-        self.state.altitude = 123.4
-        self.state.battery_percent = 87
+#         self.state.roll = 30.0 * math.sin(t * 0.5)
+#         self.state.pitch = 15.0 * math.sin(t * 0.35)
+#         self.state.heading = (t * 10.0) % 360.0
+#         self.state.altitude = 123.4
+#         self.state.battery_percent = 87
 
-    def get(self) -> TelemetryState:
+#     def get(self) -> TelemetryState:
 
-        self.update()
-        return self.state
+#         self.update()
+#         return self.state

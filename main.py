@@ -5,6 +5,9 @@ Application entry point.
 """
 
 import cv2
+import faulthandler
+import signal
+import sys
 
 from config import load_config
 from gstpipeline import GstPipeline
@@ -18,6 +21,8 @@ logger = get_logger(__name__)
 
 
 def main():
+
+    faulthandler.register(signal.SIGUSR1)
 
     config = load_config()
 
@@ -56,13 +61,9 @@ def main():
         logger.info("Interrupted")
 
     finally:
-        print("A")
         telemetry.stop()
-        print("B")
         pipeline.stop()
-        print("C")
         cv2.destroyAllWindows()
-        print("D")
         logger.info("Stopped")
 
 

@@ -66,8 +66,6 @@ class GstPipeline:
 
         self.running = False
 
-
-
         print("before null")
         state_change, current, pending = self.pipeline.get_state(0)
 
@@ -75,6 +73,8 @@ class GstPipeline:
             f"Current={current.value_nick} "
             f"Pending={pending.value_nick}"
         )
+        self.appsink.disconnect_by_func(self._on_new_sample)
+
         self.pipeline.set_state(Gst.State.NULL)
         print("after null")
         cv2.destroyAllWindows()
@@ -124,6 +124,9 @@ class GstPipeline:
         )
 
     def _on_new_sample(self, sink):
+
+        if not self.running:
+            return Gst.FlowReturn.OK
 
         sample = sink.emit("pull-sample")
 

@@ -8,9 +8,9 @@ display:
   window_name: raspi-hud
 
 logging:
-  level: INFO
+  level: DEBUG
 
 mavlink:
-  connection: udp:127.0.0.1:14550
+  connection: udp:0.0.0.0:14550
   baudrate: 57600
   source: "pymavlink"
