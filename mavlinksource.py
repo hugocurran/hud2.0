@@ -100,13 +100,16 @@ class MavlinkSource(TelemetrySource):
             pitch
             heading
         """
-        state.roll = -math.degrees(msg.roll)
+       
+        state.roll = math.degrees(msg.roll)
         state.pitch = math.degrees(msg.pitch)
         state.heading = (
             math.degrees(msg.yaw) + 360
         ) % 360
 
         state.last_update = time.monotonic()
+
+
  
     def _handle_heartbeat(
         self,

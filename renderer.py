@@ -33,7 +33,7 @@ class Renderer:
             ) -> np.ndarray:
 
         self.frame_counter += 1
-
+  
         h, w = frame.shape[:2]
 
         if (
@@ -177,7 +177,7 @@ class Renderer:
             HudStyle.LINE_WIDTH,
         )
 
-        #
+        # 
         # right wing
         #
 

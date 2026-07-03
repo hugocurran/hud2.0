@@ -59,9 +59,6 @@ class HudGeometry:
         """
         Return the current horizon line.
         """
-
-        roll = math.radians(roll_deg)
-
         dx, dy = self._rotation(roll_deg)
 
         y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
@@ -161,9 +158,8 @@ class HudGeometry:
                 if major
                 else HudStyle.ROLL_MINOR_TICK
             )
-            # The bank scale rotates opposite to the aircraft attitude
-            # relative to the fixed roll pointer.
-            radians = math.radians(angle - roll_deg)
+
+            radians = math.radians(angle + roll_deg)
 
             sx = math.sin(radians)
             cy = math.cos(radians)
@@ -228,8 +224,8 @@ class HudGeometry:
     def _rotation(self, roll_deg: float):
 
         roll = math.radians(roll_deg)
-        # OpenCV image coordinates have +Y down, so invert the
-        # mathematical Y component.
+        # Convert from mathematical coordinates (Y increasing upwards)
+        # to OpenCV image coordinates (Y increasing downwards).
         return (
             math.cos(roll),
             -math.sin(roll),
