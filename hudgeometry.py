@@ -161,8 +161,9 @@ class HudGeometry:
                 if major
                 else HudStyle.ROLL_MINOR_TICK
             )
-
-            radians = math.radians(angle + roll_deg)
+            # The bank scale rotates opposite to the aircraft attitude
+            # relative to the fixed roll pointer.
+            radians = math.radians(angle - roll_deg)
 
             sx = math.sin(radians)
             cy = math.cos(radians)
@@ -227,10 +228,11 @@ class HudGeometry:
     def _rotation(self, roll_deg: float):
 
         roll = math.radians(roll_deg)
-
+        # OpenCV image coordinates have +Y down, so invert the
+        # mathematical Y component.
         return (
             math.cos(roll),
-            math.sin(roll),
+            -math.sin(roll),
         )
     
     def _normal(self, dx: float, dy: float) -> tuple[float, float]:
