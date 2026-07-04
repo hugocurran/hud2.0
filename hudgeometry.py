@@ -33,6 +33,32 @@ class PitchMark:
     value: int
 
 @dataclass
+class LadderMark:
+    """
+    Geometry for a single pitch ladder mark.
+
+    All coordinates are already transformed into screen coordinates.
+    """
+
+    centre_line: Line
+
+    left_tick: Line
+
+    right_tick: Line
+
+    left_label: tuple[int, int]
+
+    right_label: tuple[int, int]
+
+    label: str
+
+
+@dataclass
+class LadderRung:
+    pitch: int
+    width: int   
+
+@dataclass
 class RollTick:
 
     p1: tuple[int, int]
@@ -60,14 +86,14 @@ class HudGeometry:
         pitch_px = pitch_deg * HudStyle.PITCH_SCALE
         L = HudStyle.HORIZON_LENGTH
 
-        p1 = self._attitude_transform(
+        p1 = self._aircraft_to_screen(
             -L,
             0,
             roll_deg,
             pitch_px,
         )
 
-        p2 = self._attitude_transform(
+        p2 = self._aircraft_to_screen(
             L,
             0,
             roll_deg,
@@ -242,14 +268,28 @@ class HudGeometry:
             right,
         )
 
-    def _attitude_transform(
+    def _aircraft_to_screen(
         self,
         x: float,
         y: float,
         roll_deg: float,
-        pitch_px: float,
+        aircraft_pitch_px: float,
     ) -> tuple[int, int]:
+        """
+        Convert a point from aircraft coordinates to screen coordinates.
 
+        Aircraft coordinates:
+            +X = right wing
+            +Y = above the aircraft
+
+        Screen coordinates:
+            Origin at screen centre.
+            +X = right
+            +Y = down
+
+        The point is rotated by the aircraft roll and translated by the
+        current pitch before being converted to screen coordinates.
+        """
         roll = math.radians(roll_deg)
 
         c = math.cos(roll)
@@ -260,7 +300,7 @@ class HudGeometry:
 
         return (
             int(self.cx + xr),
-            int(self.cy + pitch_px - yr),
+            int(self.cy + aircraft_pitch_px - yr),
         ) 
         
     def _rotation(self, roll_deg: float):
