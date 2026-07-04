@@ -56,25 +56,46 @@ class HudGeometry:
         self.cy = height // 2
 
     def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
-        """
-        Return the current horizon line.
-        """
-        dx, dy = self._rotation(roll_deg)
 
-        y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
-
+        pitch_px = pitch_deg * HudStyle.PITCH_SCALE
         L = HudStyle.HORIZON_LENGTH
 
-        x1 = int(self.cx - dx * L)
-        y1 = int(y - dy * L)
-
-        x2 = int(self.cx + dx * L)
-        y2 = int(y + dy * L)
-
-        return Line(
-            (x1, y1),
-            (x2, y2),
+        p1 = self._attitude_transform(
+            -L,
+            0,
+            roll_deg,
+            pitch_px,
         )
+
+        p2 = self._attitude_transform(
+            L,
+            0,
+            roll_deg,
+            pitch_px,
+        )
+
+        return Line(p1, p2)
+
+    # def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
+    #     """
+    #     Return the current horizon line.
+    #     """
+    #     dx, dy = self._rotation(roll_deg)
+
+    #     y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
+
+    #     L = HudStyle.HORIZON_LENGTH
+
+    #     x1 = int(self.cx - dx * L)
+    #     y1 = int(y - dy * L)
+
+    #     x2 = int(self.cx + dx * L)
+    #     y2 = int(y + dy * L)
+
+    #     return Line(
+    #         (x1, y1),
+    #         (x2, y2),
+    #     )
 
     def pitch_mark(
         self,
@@ -220,6 +241,27 @@ class HudGeometry:
             left,
             right,
         )
+
+    def _attitude_transform(
+        self,
+        x: float,
+        y: float,
+        roll_deg: float,
+        pitch_px: float,
+    ) -> tuple[int, int]:
+
+        roll = math.radians(roll_deg)
+
+        c = math.cos(roll)
+        s = math.sin(roll)
+
+        xr = x * c - y * s
+        yr = x * s + y * c
+
+        return (
+            int(self.cx + xr),
+            int(self.cy + pitch_px - yr),
+        ) 
         
     def _rotation(self, roll_deg: float):
 
