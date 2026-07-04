@@ -102,6 +102,18 @@ class Renderer:
                 ladder.centre_line,
             )
 
+            if ladder.left_cap is not None:
+                self.draw_line(
+                    frame,
+                    ladder.left_cap,
+            )
+
+            if ladder.right_cap is not None:
+                self.draw_line(
+                    frame,
+                    ladder.right_cap,
+                )
+
     # def draw_pitch_ladder(self, frame, state):
 
     #     aircraft_pitch_px = (

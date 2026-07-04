@@ -18,19 +18,19 @@ class Line:
     p1: tuple[int, int]
     p2: tuple[int, int]
 
-@dataclass
-class PitchMark:
+# @dataclass
+# class PitchMark:
 
-    p1: tuple[int, int]
-    p2: tuple[int, int]
+#     p1: tuple[int, int]
+#     p2: tuple[int, int]
 
-    left_cap: tuple[int, int]
-    right_cap: tuple[int, int]
+#     left_cap: tuple[int, int]
+#     right_cap: tuple[int, int]
 
-    left_text: tuple[int, int]
-    right_text: tuple[int, int]
+#     left_text: tuple[int, int]
+#     right_text: tuple[int, int]
 
-    value: int
+#     value: int
 
 @dataclass
 class LadderMark:
@@ -40,17 +40,17 @@ class LadderMark:
     All coordinates are already transformed into screen coordinates.
     """
 
-    centre_line: Line
+    centre_line: Line | None
 
-    left_tick: Line
+    left_cap: Line | None
 
-    right_tick: Line
+    right_cap: Line | None
 
-    left_label: tuple[int, int]
+    left_label: tuple[int, int] | None = None
 
-    right_label: tuple[int, int]
+    right_label: tuple[int, int] | None = None
 
-    label: str
+    label: str | None = None
 
 
 @dataclass
@@ -123,73 +123,126 @@ class HudGeometry:
     #         (x2, y2),
     #     )
 
-    def pitch_mark(
+    # def pitch_mark(
+    #     self,
+    #     roll_deg: float,
+    #     aircraft_pitch: float,
+    #     mark_pitch: float,
+    # ) -> Line:
+    #     """
+    #     Return one pitch ladder mark.
+    #     """
+
+    #     dx, dy = self._rotation(roll_deg)
+
+    #     nx, ny = self._normal(dx, dy)
+
+    #     offset = (
+    #         mark_pitch - aircraft_pitch
+    #     ) * HudStyle.PITCH_SCALE
+
+    #     mx = self.cx + nx * offset
+    #     my = self.cy + ny * offset
+
+    #     half = (
+    #         HudStyle.PITCH_MAJOR_WIDTH
+    #         if mark_pitch % 10 == 0
+    #         else HudStyle.PITCH_MINOR_WIDTH
+    #     )
+
+    #     cap = HudStyle.PITCH_CAP_LENGTH
+
+    #     x1 = int(mx - dx * half)
+    #     y1 = int(my - dy * half)
+
+    #     x2 = int(mx + dx * half)
+    #     y2 = int(my + dy * half)
+
+    #     cap = HudStyle.PITCH_CAP_LENGTH
+
+    #     left_cap = (
+    #         int(x1 + nx * cap),
+    #         int(y1 + ny * cap),
+    #     )
+
+    #     right_cap = (
+    #         int(x2 + nx * cap),
+    #         int(y2 + ny * cap),
+    #     )
+
+    #     offset = HudStyle.PITCH_LABEL_OFFSET
+
+    #     left_text = (
+    #         int(x1 - dx * offset),
+    #         int(y1 - dy * offset),
+    #     )
+
+    #     right_text = (
+    #         int(x2 + dx * offset),
+    #         int(y2 + dy * offset),
+    #     )
+
+    #     return PitchMark(
+    #         (x1, y1),
+    #         (x2, y2),
+    #         left_cap,
+    #         right_cap, 
+    #         left_text,
+    #         right_text,
+    #         mark_pitch,
+    #     )
+
+    def ladder_mark(
         self,
+        pitch: int,
         roll_deg: float,
-        aircraft_pitch: float,
-        mark_pitch: float,
-    ) -> Line:
-        """
-        Return one pitch ladder mark.
-        """
+        aircraft_pitch_px: float,
+        major: bool,
+    ) -> LadderMark:
 
-        dx, dy = self._rotation(roll_deg)
-
-        nx, ny = self._normal(dx, dy)
-
-        offset = (
-            mark_pitch - aircraft_pitch
-        ) * HudStyle.PITCH_SCALE
-
-        mx = self.cx + nx * offset
-        my = self.cy + ny * offset
-
-        half = (
+        width = (
             HudStyle.PITCH_MAJOR_WIDTH
-            if mark_pitch % 10 == 0
+            if major
             else HudStyle.PITCH_MINOR_WIDTH
         )
 
-        cap = HudStyle.PITCH_CAP_LENGTH
+        mark_y = pitch * HudStyle.PITCH_SCALE
+        cap = HudStyle.PITCH_CAP_LENGTH / 2
 
-        x1 = int(mx - dx * half)
-        y1 = int(my - dy * half)
-
-        x2 = int(mx + dx * half)
-        y2 = int(my + dy * half)
-
-        cap = HudStyle.PITCH_CAP_LENGTH
-
-        left_cap = (
-            int(x1 + nx * cap),
-            int(y1 + ny * cap),
+        centre_line = self._aircraft_line(
+            -width,
+            mark_y,
+            width,
+            mark_y,
+            roll_deg,
+            aircraft_pitch_px,
         )
 
-        right_cap = (
-            int(x2 + nx * cap),
-            int(y2 + ny * cap),
+        left_cap = self._aircraft_line(
+            -width,
+            mark_y + cap,
+            -width,
+            mark_y - cap,
+            roll_deg,
+            aircraft_pitch_px,
         )
 
-        offset = HudStyle.PITCH_LABEL_OFFSET
-
-        left_text = (
-            int(x1 - dx * offset),
-            int(y1 - dy * offset),
+        right_cap = self._aircraft_line(
+            width,
+            mark_y + cap,
+            width,
+            mark_y - cap,
+            roll_deg,
+            aircraft_pitch_px,
         )
 
-        right_text = (
-            int(x2 + dx * offset),
-            int(y2 + dy * offset),
-        )
-
-        return PitchMark(
-            (x1, y1),
-            (x2, y2),
-            left_cap,
-            right_cap, 
-            left_text,
-            right_text,
-            mark_pitch,
+        return LadderMark(
+            centre_line=centre_line,
+            left_cap=left_cap,
+            right_cap=right_cap,
+            left_label=(0, 0),
+            right_label=(0, 0),
+            label=str(abs(pitch)),
         )
     
     def roll_ticks(self, roll_deg: float) -> list[RollTick]:
@@ -302,6 +355,20 @@ class HudGeometry:
             int(self.cx + xr),
             int(self.cy + aircraft_pitch_px - yr),
         ) 
+    
+    def _aircraft_line(
+        self,
+        x1: float,
+        y1: float,
+        x2: float,
+        y2: float,
+        roll_deg: float,
+        aircraft_pitch_px: float,
+        ) -> Line:
+            p1 = self._aircraft_to_screen(x1, y1, roll_deg, aircraft_pitch_px)
+            p2 = self._aircraft_to_screen(x2, y2, roll_deg, aircraft_pitch_px)
+            return Line(p1, p2)
+        
         
     def _rotation(self, roll_deg: float):
 
