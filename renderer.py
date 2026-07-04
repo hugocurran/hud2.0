@@ -79,78 +79,116 @@ class Renderer:
 
     def draw_pitch_ladder(self, frame, state):
 
+        aircraft_pitch_px = (
+            state.pitch * HudStyle.PITCH_SCALE
+        )
+
         for mark in range(-30, 35, 5):
 
             if mark == 0:
                 continue
 
-            pitch = self.geometry.pitch_mark(
-                state.roll,
-                state.pitch,
+            major = abs(mark) % 10 == 0
+
+            ladder = self.geometry.ladder_mark(
                 mark,
+                state.roll,
+                aircraft_pitch_px,
+                major,
             )
 
-            # print (line)
-            self.draw_line(frame, pitch)
-
-            # End caps
-            cv2.line(
+            self.draw_line(
                 frame,
-                pitch.p1,
-                pitch.left_cap,
-                HudStyle.COLOUR,
-                HudStyle.LINE_WIDTH,
-                cv2.LINE_AA,
+                ladder.centre_line,
             )
 
-            cv2.line(
-                frame,
-                pitch.p2,
-                pitch.right_cap,
-                HudStyle.COLOUR,
-                HudStyle.LINE_WIDTH,
-                cv2.LINE_AA,
-            )
+    # def draw_pitch_ladder(self, frame, state):
 
-            if mark % 10 == 0:
+    #     aircraft_pitch_px = (
+    #         state.pitch * HudStyle.PITCH_SCALE
+    #     )
 
-                text = str(abs(mark))
+    #     for mark in range(-30, 35, 5):
 
-                (text_width, text_height), _ = cv2.getTextSize(
-                    text,
-                    HudStyle.FONT,
-                    HudStyle.PITCH_LABEL_FONT_SCALE,
-                    HudStyle.PITCH_LABEL_THICKNESS,
-            )               
+    #         if mark == 0:
+    #             continue
 
-                left_pos = (
-                    pitch.left_text[0] - text_width,
-                    pitch.left_text[1],
-                )
+    #         major = abs(mark) % 10 == 0
 
-                right_pos = pitch.right_text
+    #         # pitch = self.geometry.pitch_mark(
+    #         #     state.roll,
+    #         #     state.pitch,
+    #         #     mark,
+    #         # )
+            
+    #         ladder = self.geometry.ladder_mark(
+    #             mark,
+    #             state.roll,
+    #             aircraft_pitch_px,
+    #             major,
+    #         )
 
-                cv2.putText(
-                    frame,
-                    text,
-                    left_pos,
-                    HudStyle.FONT,
-                    HudStyle.PITCH_LABEL_FONT_SCALE,
-                    HudStyle.COLOUR,
-                    HudStyle.PITCH_LABEL_THICKNESS,
-                cv2.LINE_AA,
-                )
+    #         # print (line)
+    #         self.draw_line(frame, pitch)
 
-                cv2.putText(
-                    frame,
-                    text,
-                    right_pos,
-                    HudStyle.FONT,
-                    HudStyle.PITCH_LABEL_FONT_SCALE,
-                    HudStyle.COLOUR,
-                    HudStyle.PITCH_LABEL_THICKNESS,
-                    cv2.LINE_AA,
-                )
+    #         # End caps
+    #         cv2.line(
+    #             frame,
+    #             pitch.p1,
+    #             pitch.left_cap,
+    #             HudStyle.COLOUR,
+    #             HudStyle.LINE_WIDTH,
+    #             cv2.LINE_AA,
+    #         )
+
+    #         cv2.line(
+    #             frame,
+    #             pitch.p2,
+    #             pitch.right_cap,
+    #             HudStyle.COLOUR,
+    #             HudStyle.LINE_WIDTH,
+    #             cv2.LINE_AA,
+    #         )
+
+    #         if mark % 10 == 0:
+
+    #             text = str(abs(mark))
+
+    #             (text_width, text_height), _ = cv2.getTextSize(
+    #                 text,
+    #                 HudStyle.FONT,
+    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
+    #                 HudStyle.PITCH_LABEL_THICKNESS,
+    #         )               
+
+    #             left_pos = (
+    #                 pitch.left_text[0] - text_width,
+    #                 pitch.left_text[1],
+    #             )
+
+    #             right_pos = pitch.right_text
+
+    #             cv2.putText(
+    #                 frame,
+    #                 text,
+    #                 left_pos,
+    #                 HudStyle.FONT,
+    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
+    #                 HudStyle.COLOUR,
+    #                 HudStyle.PITCH_LABEL_THICKNESS,
+    #             cv2.LINE_AA,
+    #             )
+
+    #             cv2.putText(
+    #                 frame,
+    #                 text,
+    #                 right_pos,
+    #                 HudStyle.FONT,
+    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
+    #                 HudStyle.COLOUR,
+    #                 HudStyle.PITCH_LABEL_THICKNESS,
+    #                 cv2.LINE_AA,
+    #             )
 
     # ---------------------------------------------------------
 
