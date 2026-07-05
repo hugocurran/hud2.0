@@ -236,12 +236,26 @@ class HudGeometry:
             aircraft_pitch_px,
         )
 
+        left_label = self._aircraft_to_screen(
+            -width - HudStyle.PITCH_LABEL_OFFSET,
+            mark_y,
+            roll_deg,
+            aircraft_pitch_px,
+        )
+
+        right_label = self._aircraft_to_screen(
+            width + HudStyle.PITCH_LABEL_OFFSET,
+            mark_y,
+            roll_deg,
+            aircraft_pitch_px,
+        )
+
         return LadderMark(
             centre_line=centre_line,
             left_cap=left_cap,
             right_cap=right_cap,
-            left_label=(0, 0),
-            right_label=(0, 0),
+            left_label=left_label,
+            right_label=right_label,
             label=str(abs(pitch)),
         )
     

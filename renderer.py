@@ -18,11 +18,15 @@ from hudgeometry import HudGeometry
 
 class Renderer:
 
+    ALIGN_LEFT = "left"
+    ALIGN_RIGHT = "right" 
+
     def __init__(self):
 
         self.geometry = None
 
         self.frame_counter = 0
+
 
     # ---------------------------------------------------------
 
@@ -79,6 +83,7 @@ class Renderer:
 
     def draw_pitch_ladder(self, frame, state):
 
+        
         aircraft_pitch_px = (
             state.pitch * HudStyle.PITCH_SCALE
         )
@@ -112,6 +117,22 @@ class Renderer:
                 self.draw_line(
                     frame,
                     ladder.right_cap,
+                )
+
+            if major:
+
+                self.draw_label(
+                    frame,
+                    ladder.label,
+                    ladder.left_label,
+                    align=self.ALIGN_RIGHT,
+                )
+
+                self.draw_label(
+                    frame,
+                    ladder.label,
+                    ladder.right_label,
+                    align=self.ALIGN_LEFT,
                 )
 
     # def draw_pitch_ladder(self, frame, state):
@@ -304,6 +325,36 @@ class Renderer:
             cv2.LINE_AA,
         )
 
+    def draw_label(
+        self,
+        frame,
+        text: str,
+        position: tuple[int, int],
+        align: str = "left",
+    ) -> None:
+        
+        (text_width, text_height), _ = cv2.getTextSize(
+            text,
+            HudStyle.FONT,
+            HudStyle.PITCH_LABEL_FONT_SCALE,
+            HudStyle.PITCH_LABEL_THICKNESS,
+        )
+
+        x, y = position
+
+        if align == "right":
+            x -= text_width
+
+        cv2.putText(
+            frame,
+            text,
+            (x, y),
+            HudStyle.FONT,
+            HudStyle.PITCH_LABEL_FONT_SCALE,
+            HudStyle.COLOUR,
+            HudStyle.PITCH_LABEL_THICKNESS,
+            cv2.LINE_AA,
+        )        
 
     def draw_frame_counter(self, frame):
 
