@@ -13,7 +13,8 @@ import cv2
 import numpy as np
 
 from hudstyle import HudStyle
-from hudgeometry import HudGeometry
+from hudgeometry import HudGeometry, Point, Line
+from aircraft import AircraftState
 
 
 class Renderer:
@@ -33,7 +34,7 @@ class Renderer:
     def process(
             self,
             frame: np.ndarray,
-            state,
+            state: AircraftState,
             ) -> np.ndarray:
 
         self.frame_counter += 1
@@ -69,19 +70,22 @@ class Renderer:
 
     # ---------------------------------------------------------
 
-    def draw_horizon(self, frame, state):
+    def draw_horizon(self, frame, state: AircraftState):
 
-        line = self.geometry.horizon(
+        horizon = self.geometry.horizon(
             state.roll,
             state.pitch,
         )
 
-        self.draw_line(frame, line)
+        self.draw_line(
+            frame,
+            horizon.line,
+        )
 
 
     # ---------------------------------------------------------
 
-    def draw_pitch_ladder(self, frame, state):
+    def draw_pitch_ladder(self, frame, state: AircraftState):
 
         
         aircraft_pitch_px = (
@@ -135,94 +139,6 @@ class Renderer:
                     align=self.ALIGN_LEFT,
                 )
 
-    # def draw_pitch_ladder(self, frame, state):
-
-    #     aircraft_pitch_px = (
-    #         state.pitch * HudStyle.PITCH_SCALE
-    #     )
-
-    #     for mark in range(-30, 35, 5):
-
-    #         if mark == 0:
-    #             continue
-
-    #         major = abs(mark) % 10 == 0
-
-    #         # pitch = self.geometry.pitch_mark(
-    #         #     state.roll,
-    #         #     state.pitch,
-    #         #     mark,
-    #         # )
-            
-    #         ladder = self.geometry.ladder_mark(
-    #             mark,
-    #             state.roll,
-    #             aircraft_pitch_px,
-    #             major,
-    #         )
-
-    #         # print (line)
-    #         self.draw_line(frame, pitch)
-
-    #         # End caps
-    #         cv2.line(
-    #             frame,
-    #             pitch.p1,
-    #             pitch.left_cap,
-    #             HudStyle.COLOUR,
-    #             HudStyle.LINE_WIDTH,
-    #             cv2.LINE_AA,
-    #         )
-
-    #         cv2.line(
-    #             frame,
-    #             pitch.p2,
-    #             pitch.right_cap,
-    #             HudStyle.COLOUR,
-    #             HudStyle.LINE_WIDTH,
-    #             cv2.LINE_AA,
-    #         )
-
-    #         if mark % 10 == 0:
-
-    #             text = str(abs(mark))
-
-    #             (text_width, text_height), _ = cv2.getTextSize(
-    #                 text,
-    #                 HudStyle.FONT,
-    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
-    #                 HudStyle.PITCH_LABEL_THICKNESS,
-    #         )               
-
-    #             left_pos = (
-    #                 pitch.left_text[0] - text_width,
-    #                 pitch.left_text[1],
-    #             )
-
-    #             right_pos = pitch.right_text
-
-    #             cv2.putText(
-    #                 frame,
-    #                 text,
-    #                 left_pos,
-    #                 HudStyle.FONT,
-    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
-    #                 HudStyle.COLOUR,
-    #                 HudStyle.PITCH_LABEL_THICKNESS,
-    #             cv2.LINE_AA,
-    #             )
-
-    #             cv2.putText(
-    #                 frame,
-    #                 text,
-    #                 right_pos,
-    #                 HudStyle.FONT,
-    #                 HudStyle.PITCH_LABEL_FONT_SCALE,
-    #                 HudStyle.COLOUR,
-    #                 HudStyle.PITCH_LABEL_THICKNESS,
-    #                 cv2.LINE_AA,
-    #             )
-
     # ---------------------------------------------------------
 
     def draw_aircraft_symbol(self, frame):
@@ -274,7 +190,7 @@ class Renderer:
 
     # ---------------------------------------------------------
 
-    def draw_status(self, frame, state):
+    def draw_status(self, frame, state: AircraftState):
 
         x = 20
         y = 40
@@ -314,12 +230,12 @@ class Renderer:
     # ---------------------------------------------------------
     # ---------------------------------------------------------
 
-    def draw_line(self, frame, line):
+    def draw_line(self, frame, line: Line) -> None:
 
         cv2.line(
             frame,
-            line.p1,
-            line.p2,
+            (line.start.x, line.start.y),
+            (line.end.x, line.end.y),
             HudStyle.COLOUR,
             HudStyle.LINE_WIDTH,
             cv2.LINE_AA,
@@ -329,7 +245,7 @@ class Renderer:
         self,
         frame,
         text: str,
-        position: tuple[int, int],
+        position: Point,
         align: str = "left",
     ) -> None:
         
@@ -340,15 +256,15 @@ class Renderer:
             HudStyle.PITCH_LABEL_THICKNESS,
         )
 
-        x, y = position
+        x = position.x
 
-        if align == "right":
+        if align == self.ALIGN_RIGHT:
             x -= text_width
 
         cv2.putText(
             frame,
             text,
-            (x, y),
+            (x, position.y),
             HudStyle.FONT,
             HudStyle.PITCH_LABEL_FONT_SCALE,
             HudStyle.COLOUR,
@@ -369,18 +285,36 @@ class Renderer:
             cv2.LINE_AA,
         )
 
-    def draw_roll_scale(self, frame, state):
+    def draw_roll_scale(self, frame, state: AircraftState):
 
-        for tick in self.geometry.roll_ticks(state.roll):
+        horizon = self.geometry.horizon(
+            state.roll,
+            state.pitch,
+        )
 
-            self.draw_line(frame, tick)
+        self.draw_line(
+            frame,
+            horizon.line,
+        )
 
-            if tick.major:
+        scale = self.geometry.roll_scale(
+            horizon,
+            state.roll,
+        )
+        for mark in scale.marks:
+            self.draw_line(frame, mark.tick)
 
+            if mark.major:
+                 self.draw_label(
+                    frame,
+                    str(abs(mark.angle)),
+                    mark.label,
+                    align=self.ALIGN_LEFT,
+                 )
                  cv2.putText(
                       frame,
-                      str(abs(tick.angle)),
-                      tick.text,
+                      str(abs(mark.angle)),
+                      (mark.label.x, mark.label.y),
                       HudStyle.FONT,
                       HudStyle.ROLL_LABEL_FONT_SCALE,
                       HudStyle.COLOUR,

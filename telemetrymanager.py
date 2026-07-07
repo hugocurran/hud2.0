@@ -11,7 +11,7 @@ import threading
 import time
 
 
-from telemetry import TelemetryState
+from aircraft import AircraftState
 from telemetrysource import TelemetrySource
 from dataclasses import replace
 
@@ -21,7 +21,7 @@ class TelemetryManager:
     def __init__(self, source: TelemetrySource):
 
         self._source = source
-        self._state = TelemetryState()
+        self._state = AircraftState()
         self._lock = threading.Lock()
         self._running = False
         self._thread: threading.Thread | None = None
@@ -45,7 +45,7 @@ class TelemetryManager:
 
         self._source.stop()
 
-    def get_state(self) -> TelemetryState:
+    def get_state(self) -> AircraftState:
         with self._lock:
             return replace(self._state)
     

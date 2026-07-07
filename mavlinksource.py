@@ -12,6 +12,7 @@ from telemetry import TelemetryState
 from collections.abc import Callable
 from util import get_logger
 from config import load_config
+from aircraft import AircraftState
 
 
 class MavlinkSource(TelemetrySource):
@@ -20,6 +21,8 @@ class MavlinkSource(TelemetrySource):
 
     def __init__(self, connection: str, baudrate: int):
         config = load_config()
+
+        #self.aircraft_state = AircraftState()
 
         self.logger = get_logger(
             "mavlink",
@@ -62,7 +65,7 @@ class MavlinkSource(TelemetrySource):
 
     def update_state(
         self,
-        state: TelemetryState,
+        state: AircraftState,
     ) -> None:
 
         while True:
@@ -90,7 +93,7 @@ class MavlinkSource(TelemetrySource):
     def _handle_attitude(
         self,
         msg,
-        state: TelemetryState,
+        state: AircraftState,
     ) -> None:
         """
         Decode ATTITUDE.
@@ -114,7 +117,7 @@ class MavlinkSource(TelemetrySource):
     def _handle_heartbeat(
         self,
         msg,
-        state: TelemetryState,
+        state: AircraftState,
     ) -> None:
         """
         Decode HEARTBEAT.

@@ -11,26 +11,25 @@ import math
 
 from hudstyle import HudStyle
 
+""" A point on the screen """
+@dataclass(frozen=True)
+class Point:
+    x: int
+    y: int
 
+""" A line segment on the screen """
 @dataclass
 class Line:
+    start: Point
+    end: Point
 
-    p1: tuple[int, int]
-    p2: tuple[int, int]
 
-# @dataclass
-# class PitchMark:
+@dataclass
+class Horizon:
 
-#     p1: tuple[int, int]
-#     p2: tuple[int, int]
+    line: Line
 
-#     left_cap: tuple[int, int]
-#     right_cap: tuple[int, int]
-
-#     left_text: tuple[int, int]
-#     right_text: tuple[int, int]
-
-#     value: int
+    centre: Point
 
 @dataclass
 class LadderMark:
@@ -46,30 +45,37 @@ class LadderMark:
 
     right_cap: Line | None
 
-    left_label: tuple[int, int] | None = None
+    left_label: Point | None = None
 
-    right_label: tuple[int, int] | None = None
+    right_label: Point | None = None
 
     label: str | None = None
 
+@dataclass
+class AttitudeFrame:
+
+    horizon: Line
+
+    ladder: list[LadderMark]
+
+    roll_scale: RollScale
+
 
 @dataclass
-class LadderRung:
-    pitch: int
-    width: int   
+class RollScale:
+
+    marks: list[RollMark]
 
 @dataclass
-class RollTick:
+class RollMark:
 
-    p1: tuple[int, int]
-    p2: tuple[int, int]
+    tick: Line
 
-    text: tuple[int, int]
+    label: Point
 
     angle: int
 
     major: bool
-
 
 class HudGeometry:
 
@@ -81,117 +87,38 @@ class HudGeometry:
         self.cx = width // 2
         self.cy = height // 2
 
-    def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
+    def horizon(self, roll_deg: float, pitch_deg: float,) -> Horizon:
 
-        pitch_px = pitch_deg * HudStyle.PITCH_SCALE
-        L = HudStyle.HORIZON_LENGTH
+            pitch_px = pitch_deg * HudStyle.PITCH_SCALE
+            L = HudStyle.HORIZON_LENGTH
 
-        p1 = self._aircraft_to_screen(
-            -L,
-            0,
-            roll_deg,
-            pitch_px,
-        )
+            centre = self._aircraft_to_screen(
+                0,
+                0,
+                roll_deg,
+                pitch_px,
+            )
 
-        p2 = self._aircraft_to_screen(
-            L,
-            0,
-            roll_deg,
-            pitch_px,
-        )
+            left = self._aircraft_to_screen(
+                -L,
+                0,
+                roll_deg,
+                pitch_px,
+            )
 
-        return Line(p1, p2)
+            right = self._aircraft_to_screen(
+                L,
+                0,
+                roll_deg,
+                pitch_px,
+            )
 
-    # def horizon(self, roll_deg: float, pitch_deg: float) -> Line:
-    #     """
-    #     Return the current horizon line.
-    #     """
-    #     dx, dy = self._rotation(roll_deg)
+            return Horizon(
+                line=Line(left, right),
+                centre=centre,
+            )
 
-    #     y = self.cy + pitch_deg * HudStyle.PITCH_SCALE
-
-    #     L = HudStyle.HORIZON_LENGTH
-
-    #     x1 = int(self.cx - dx * L)
-    #     y1 = int(y - dy * L)
-
-    #     x2 = int(self.cx + dx * L)
-    #     y2 = int(y + dy * L)
-
-    #     return Line(
-    #         (x1, y1),
-    #         (x2, y2),
-    #     )
-
-    # def pitch_mark(
-    #     self,
-    #     roll_deg: float,
-    #     aircraft_pitch: float,
-    #     mark_pitch: float,
-    # ) -> Line:
-    #     """
-    #     Return one pitch ladder mark.
-    #     """
-
-    #     dx, dy = self._rotation(roll_deg)
-
-    #     nx, ny = self._normal(dx, dy)
-
-    #     offset = (
-    #         mark_pitch - aircraft_pitch
-    #     ) * HudStyle.PITCH_SCALE
-
-    #     mx = self.cx + nx * offset
-    #     my = self.cy + ny * offset
-
-    #     half = (
-    #         HudStyle.PITCH_MAJOR_WIDTH
-    #         if mark_pitch % 10 == 0
-    #         else HudStyle.PITCH_MINOR_WIDTH
-    #     )
-
-    #     cap = HudStyle.PITCH_CAP_LENGTH
-
-    #     x1 = int(mx - dx * half)
-    #     y1 = int(my - dy * half)
-
-    #     x2 = int(mx + dx * half)
-    #     y2 = int(my + dy * half)
-
-    #     cap = HudStyle.PITCH_CAP_LENGTH
-
-    #     left_cap = (
-    #         int(x1 + nx * cap),
-    #         int(y1 + ny * cap),
-    #     )
-
-    #     right_cap = (
-    #         int(x2 + nx * cap),
-    #         int(y2 + ny * cap),
-    #     )
-
-    #     offset = HudStyle.PITCH_LABEL_OFFSET
-
-    #     left_text = (
-    #         int(x1 - dx * offset),
-    #         int(y1 - dy * offset),
-    #     )
-
-    #     right_text = (
-    #         int(x2 + dx * offset),
-    #         int(y2 + dy * offset),
-    #     )
-
-    #     return PitchMark(
-    #         (x1, y1),
-    #         (x2, y2),
-    #         left_cap,
-    #         right_cap, 
-    #         left_text,
-    #         right_text,
-    #         mark_pitch,
-    #     )
-
+    
     def ladder_mark(
         self,
         pitch: int,
@@ -259,9 +186,20 @@ class HudGeometry:
             label=str(abs(pitch)),
         )
     
-    def roll_ticks(self, roll_deg: float) -> list[RollTick]:
+    def roll_scale(
+        self,
+        horizon: Horizon,
+        roll_deg: float,
+    ) -> RollScale:
 
-        ticks = []
+        origin = horizon.centre
+
+        marks = []
+
+        label_radius = (
+            HudStyle.ROLL_RADIUS
+            + HudStyle.ROLL_LABEL_OFFSET
+        )
 
         for angle in (-60, -45, -30, -20, -10, 10, 20, 30, 45, 60):
 
@@ -273,36 +211,44 @@ class HudGeometry:
                 else HudStyle.ROLL_MINOR_TICK
             )
 
-            radians = math.radians(angle + roll_deg)
-
-            sx = math.sin(radians)
-            cy = math.cos(radians)
-
-            x1 = int(self.cx + sx * HudStyle.ROLL_RADIUS)
-            y1 = int(self.cy - cy * HudStyle.ROLL_RADIUS)
-
-            x2 = int(self.cx + sx * (HudStyle.ROLL_RADIUS - length))
-            y2 = int(self.cy - cy * (HudStyle.ROLL_RADIUS - length))
-
-            label_radius = (
-                HudStyle.ROLL_RADIUS 
-                + HudStyle.ROLL_LABEL_OFFSET
+            outer = self._polar_point(
+                origin,
+                #angle,
+               angle - roll_deg,
+                HudStyle.ROLL_RADIUS,
             )
 
-            tx = int(self.cx + sx * label_radius)
-            ty = int(self.cy - cy * label_radius)
-
-            ticks.append(
-                RollTick(
-                    (x1, y1),
-                    (x2, y2),
-                    (tx, ty),
-                    angle,
-                    major,
-                )
+            inner = self._polar_point(
+                origin, 
+                angle - roll_deg,
+                #angle,
+                HudStyle.ROLL_RADIUS - length,
             )
 
-        return ticks
+            label = self._polar_point(
+                origin,
+                angle - roll_deg,
+                #angle,
+                label_radius,
+            )
+
+            tick = Line(
+                outer,
+                inner,  
+            )
+
+            marks.append(
+                RollMark(
+                    tick = tick,
+                    label = label,
+                    angle = angle,
+                    major = major,
+            )
+        )
+
+        return RollScale(
+            marks=marks,
+        )
     
     def roll_pointer(self):
 
@@ -341,7 +287,7 @@ class HudGeometry:
         y: float,
         roll_deg: float,
         aircraft_pitch_px: float,
-    ) -> tuple[int, int]:
+    ) -> Point:
         """
         Convert a point from aircraft coordinates to screen coordinates.
 
@@ -365,7 +311,7 @@ class HudGeometry:
         xr = x * c - y * s
         yr = x * s + y * c
 
-        return (
+        return Point(
             int(self.cx + xr),
             int(self.cy + aircraft_pitch_px - yr),
         ) 
@@ -382,7 +328,28 @@ class HudGeometry:
             p1 = self._aircraft_to_screen(x1, y1, roll_deg, aircraft_pitch_px)
             p2 = self._aircraft_to_screen(x2, y2, roll_deg, aircraft_pitch_px)
             return Line(p1, p2)
+
+    def _polar_point(
+        self,
+        origin: Point,
+        angle_deg: float,
+        radius: float,
+    ) -> Point:   
         
+        #angle = math.radians(angle_deg)
+        angle = math.radians(angle_deg)
+
+        sx = math.sin(angle)
+        cy = math.cos(angle)
+
+        # return Point(
+        #     int(self.cx + sx * radius),
+        #     int(self.cy - cy * radius),
+        # )
+        return Point (
+              int(origin.x + sx * radius),
+              int(origin.y - cy * radius)   ,
+        )
         
     def _rotation(self, roll_deg: float):
 

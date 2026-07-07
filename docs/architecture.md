@@ -139,4 +139,76 @@ Camera --> GstPipeline --> Renderer
                            │
                        Pixhawk
 
+
+
+
+"stuff built on an angle uses polar coordinates, stuff that is basically straight lines uses cartesian."
+
+Aircraft geometry
+
+Cartesian
+----------
+Point
+Line
+
+Polar
+-----
+Arc point
+Arc line (perhaps)
                        
+
+
+
+HUD Architecture
+================
+
+The HUD consists of two independent visual frames.
+
+Static Frame
+
+The static frame is fixed relative to the display.
+
+It contains:
+
+aircraft symbol
+wings
+roll pointer
+
+These never move.
+
+Attitude Frame
+
+The attitude frame represents the outside world.
+
+It contains:
+
+horizon
+pitch ladder
+roll scale
+
+These elements are rigidly related and move as a single geometric object.
+
+Aircraft roll rotates the entire frame.
+
+Aircraft pitch translates the entire frame vertically.
+
+The renderer is responsible only for clipping and presentation. The geometry of the attitude frame is calculated by HudGeometry.
+                 HUD
+
+          +----------------+
+
+          Static Frame
+
+          ▲
+     -----+-----
+          |
+
+============================   Horizon
+  10                 10
+============================   Pitch Ladder
+
+      Roll Scale Arc
+
+          Attitude Frame
+
+          +----------------+
