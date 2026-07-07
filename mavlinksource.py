@@ -61,6 +61,11 @@ class MavlinkSource(TelemetrySource):
         ] = {
             "ATTITUDE": self._handle_attitude,
             "HEARTBEAT": self._handle_heartbeat,
+            "VFR_HUD": self._handle_vfr_hud,
+            "SYS_STATUS": self._handle_sys_status,
+            "GLOBAL_POSITION_INT": self._handle_global_position_int,
+            "GPS_RAW_INT": self._handle_gps_raw_int,
+            "MISSION_CURRENT": self._handle_mission_current,
         }
 
     def update_state(
@@ -111,8 +116,6 @@ class MavlinkSource(TelemetrySource):
         ) % 360
 
         state.last_update = time.monotonic()
-
-
  
     def _handle_heartbeat(
         self,
@@ -132,5 +135,88 @@ class MavlinkSource(TelemetrySource):
         )
 
         state.flight_mode = mavutil.mode_string_v10(msg)
+
+    def _handle_vfr_hud(
+        self,
+        msg,
+        state: AircraftState,
+    ) -> None:
+        """
+        Decode VFR_HUD.
+
+        Updates:
+        airspeed
+        groundspeed
+        altitude
+        climb_rate
+        """
+
+        state.airspeed = msg.airspeed
+        state.groundspeed = msg.groundspeed
+        state.altitude = msg.alt
+        state.climb_rate = msg.climb
+
+        state.last_update = time.monotonic()
+
+    def _handle_sys_status(        
+            self,
+            msg,
+            state: AircraftState,
+        ) -> None:
+
+        state.battery_voltage = (
+            msg.voltage_battery / 1000.0
+        )
+
+        state.battery_current = (
+            msg.current_battery / 100.0
+            if msg.current_battery >= 0
+            else None
+        )
+
+        state.battery_remaining = (
+            msg.battery_remaining
+            if msg.battery_remaining >= 0
+            else None
+        )
+
+        state.last_update = time.monotonic()
+
+    def _handle_global_position_int(
+        self,
+        msg,
+        state: AircraftState,
+    ) -> None:
+
+        state.latitude = msg.lat / 1e7
+        state.longitude = msg.lon / 1e7
+        state.altitude = msg.alt / 1000.0
+        state.relative_altitude = msg.relative_alt / 1000.0
+
+        state.last_update = time.monotonic()
+
+    def _handle_gps_raw_int(
+        self,
+        msg,
+        state: AircraftState,
+    ) -> None:
+
+        state.gps_altitude = msg.alt / 1000.0
+        state.satellites_visible = msg.satellites_visible
+        state.gps_fix_type = msg.fix_type
+        state.hdop = msg.eph / 100.0 if msg.eph >= 0 else None
+        state.vdop = msg.epv / 100.0 if msg.epv >= 0 else None
+
+        state.last_update = time.monotonic()
+
+    def _handle_mission_current(
+        self,
+        msg,
+        state: AircraftState,
+    ) -> None:
+
+        state.seq = msg.seq
+
+        state.last_update = time.monotonic()
 
         

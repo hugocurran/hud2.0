@@ -7,7 +7,7 @@ from __future__ import annotations
 import math
 import time
 
-from telemetry import TelemetryState
+from aircraft import AircraftState
 from telemetrysource import TelemetrySource
 
 
@@ -15,7 +15,7 @@ class SimulatorSource(TelemetrySource):
 
     def update_state(
         self,
-        state: TelemetryState,
+        state: AircraftState,
     ) -> None:
 
         t = time.time()

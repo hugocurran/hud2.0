@@ -203,13 +203,16 @@ class Renderer:
 
             f"Heading  {state.heading:6.1f}",
 
-            f"Altitude {state.altitude:7.1f} m",
+            # Alt AGL is displayed
+            f"Altitude {state.relative_altitude:7.1f} m",
 
             (
                 f"Battery {state.battery_remaining:3d} %"
                 if state.battery_remaining is not None
                 else "Battery --- %"
             ),
+
+            f"Mode     {state.flight_mode}",
         ]
 
         for text in lines:

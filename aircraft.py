@@ -20,6 +20,7 @@ class AircraftState:
     # --------------------------
 
     altitude: float = 0.0      # metres MSL
+    relative_altitude: float | None = None  # metres AGL
     airspeed: float | None = None      # m/s
     groundspeed: float | None = None   # m/s
     vertical_speed: float | None = None  # m/s
@@ -31,7 +32,9 @@ class AircraftState:
     latitude: float | None = None
     longitude: float | None = None
 
-    satellites: int | None = None
+    satellites_visible: int | None = None
+    gps_fix_type: int | None = None
+    gps_altitude: float | None = None
 
     hdop: float | None = None
     vdop: float | None = None
@@ -50,4 +53,13 @@ class AircraftState:
 
     armed: bool = False
     flight_mode: str = ""
+
+    #----------------------------
+    # Mission
+    #-----------------------------
+    target_bearing: float | None = None
+    target_distance: float | None = None 
+    cross_track_error: float | None = None
+    seq: int | None = None  #current waypoint sequence number
+
 
