@@ -5,8 +5,9 @@ Camera -> OpenCV -> H264 -> MPEGTS -> SRT
 """
 
 from __future__ import annotations
+import time
 
-import cv2
+#import cv2
 import numpy as np
 
 import gi
@@ -32,17 +33,29 @@ class GstPipeline:
 
         self.logger = get_logger("pipeline", config.logging.level)
 
-        self.pipeline = Gst.Pipeline.new("raspi-hud")
-
         self.frame_count = 0
 
         self.running = False
 
-        self.logger.info("Creating GStreamer pipeline...")
+        self.logger.info("Creating GStreamer pipelines...")
 
-        self._build_pipeline()
+        self.frame_duration = Gst.util_uint64_scale_int(
+            1,
+            Gst.SECOND,
+            self.config.camera.fps,
+        )
 
-        self._connect_bus()
+        #self.timestamp = 0
+
+        self.input_pipeline = Gst.Pipeline.new("raspi-hud")
+        self._build_input_pipeline()
+        self._connect_input_bus()
+
+        self.output_pipeline = Gst.Pipeline.new("hud-output")    
+        self._build_output_pipeline()
+        self._connect_output_bus()
+
+
 
         self.frame_queue = queue.Queue(maxsize=1)
 
@@ -53,25 +66,23 @@ class GstPipeline:
 
     def start(self):
 
-        self.logger.info("Starting pipeline...")
+        self.logger.info("Starting pipelines...")
 
-        self.pipeline.set_state(Gst.State.PLAYING)
+        self.input_pipeline.set_state(Gst.State.PLAYING)
+
+        self.output_pipeline.set_state(Gst.State.PLAYING)
 
         self.running = True
 
 
     def stop(self):
 
-        self.logger.info("Stopping pipeline...")
+        self.logger.info("Stopping pipelines...")
 
         self.running = False
 
-        #self.appsink.disconnect_by_func(self._on_new_sample)
-
-        self.pipeline.set_state(Gst.State.NULL)
-        print("after null")
-        cv2.destroyAllWindows()
-
+        self.output_pipeline.set_state(Gst.State.NULL)
+        self.input_pipeline.set_state(Gst.State.NULL)
 
     def get_frame(self):
 
@@ -79,8 +90,31 @@ class GstPipeline:
             return self.frame_queue.get_nowait()
         except queue.Empty:
             return None
+        
+    def push_frame(self, frame):
 
-    def _build_pipeline(self):
+        data = frame.tobytes()
+
+        buffer = Gst.Buffer.new_allocate(
+            None,
+            len(data),
+            None,
+        )
+
+        buffer.fill(0, data)
+
+        # buffer.pts = self.timestamp
+        # buffer.dts = self.timestamp
+        #buffer.duration = self.frame_duration
+
+        #self.timestamp += self.frame_duration
+
+        self.appsrc.emit(
+            "push-buffer",
+            buffer,
+        )    
+
+    def _build_input_pipeline(self):
 
         width = self.config.camera.width
         height = self.config.camera.height
@@ -103,18 +137,78 @@ class GstPipeline:
                 max-buffers=1
         """
 
-        self.logger.info("Pipeline:")
+        self.logger.info("Input Pipeline:")
 
         self.logger.info(pipeline)
 
-        self.pipeline = Gst.parse_launch(pipeline)
+        self.input_pipeline = Gst.parse_launch(pipeline)
 
-        self.appsink = self.pipeline.get_by_name("sink")
+        self.appsink = self.input_pipeline.get_by_name("sink")
 
         self.appsink.connect(
             "new-sample",
             self._on_new_sample,
         )
+
+    def _build_output_pipeline(self):
+            """
+            OpenCV renderer output.
+
+            Receives rendered BGR frames from the application via appsrc.
+
+            Initially terminates at autovideosink for latency testing.
+
+            This sink will later become:
+
+                appsrc
+                -> encoder
+                -> MPEG-TS
+                -> SRT
+            """
+        
+            width = self.config.camera.width
+            height = self.config.camera.height
+            fps = self.config.camera.fps
+
+            self.logger.info("Building H.264 output pipeline")
+
+            pipeline = f"""
+                appsrc
+                    name=source
+                    is-live=true
+                    format=time
+                    do-timestamp=true
+                    block=false
+                    caps=video/x-raw,format=BGR,width={width},height={height},framerate={fps}/1
+                !
+                queue
+                    max-size-buffers=1
+                    leaky=downstream
+                !
+                videoconvert
+                !
+                video/x-raw,format=NV12
+                !
+                x264enc 
+                    tune=zerolatency 
+                    speed-preset=ultrafast
+                    byte-stream=true
+                !
+                h264parse
+                    config-interval=-1
+                !
+                filesink
+                    location=test.h264
+            """
+
+            self.logger.info("Output pipeline:")
+
+            self.logger.info(pipeline)
+
+            self.output_pipeline = Gst.parse_launch(pipeline)
+
+            self.appsrc = self.output_pipeline.get_by_name("source")
+
 
     def _on_new_sample(self, sink):
 
@@ -135,7 +229,7 @@ class GstPipeline:
         width = structure.get_value("width")
 
         height = structure.get_value("height")
-
+  
         ok, mapinfo = buf.map(Gst.MapFlags.READ)
 
         if not ok:
@@ -150,15 +244,22 @@ class GstPipeline:
             ).copy()
 
             try:
-                self.frame_queue.put_nowait(frame)
+                arrival = time.monotonic()
+
+                self.frame_queue.put_nowait(
+                    (frame, arrival)
+                )
+
+                #self.frame_queue.put_nowait(frame)
             except queue.Full:
             # Drop the oldest frame and replace it
                 try:
-                    self.frame_queue.get_nowait()
+                    self.frame_queue.get_nowait()              
+                    #self.frame_queue.get_nowait()
                 except queue.Empty:
                     pass
-
-                self.frame_queue.put_nowait(frame)
+                # Replace it with the newest frame
+                self.frame_queue.put_nowait(frame, arrival)
 
         finally:
 
@@ -166,16 +267,36 @@ class GstPipeline:
 
         return Gst.FlowReturn.OK
     
-    def _connect_bus(self):
+    def _connect_input_bus(self):
 
-        bus = self.pipeline.get_bus()
+        bus = self.input_pipeline.get_bus()
 
         bus.add_signal_watch()
 
-        bus.connect("message", self._on_bus_message)
+        bus.connect(
+            "message",
+            self._on_bus_message,
+            "input",
+        )
 
+    def _connect_output_bus(self):
 
-    def _on_bus_message(self, _bus, message):
+        bus = self.output_pipeline.get_bus()
+
+        bus.add_signal_watch()
+
+        bus.connect(
+            "message",
+            self._on_bus_message,
+            "output",
+        )
+
+    def _on_bus_message(
+        self,
+        bus,
+        message,
+        name,
+    ):
 
         t = message.type
 
@@ -183,14 +304,21 @@ class GstPipeline:
 
             err, dbg = message.parse_error()
 
-            self.logger.error(err)
+            self.logger.error(
+                f"{name}: {err}"
+            )
 
             if dbg:
 
-                self.logger.error(dbg)
+                self.logger.debug(
+                    f"{name}: {dbg}"
+                )
 
         elif t == Gst.MessageType.EOS:
 
-            self.logger.info("End of stream")
+            self.logger.info(
+                    f"{name}: End of Stream"
+                )
+        
 
                            

@@ -4,10 +4,8 @@ raspi-hud
 Application entry point.
 """
 
-import cv2
 import faulthandler
 import signal
-import sys
 
 from config import load_config
 from gstpipeline import GstPipeline
@@ -43,19 +41,40 @@ def main():
     try:
         while True:
 
-            frame = pipeline.get_frame()
+            # frame = pipeline.get_frame()
 
-            if frame is None:
+            # if frame is None:
+            #     continue
+
+###
+            item = pipeline.get_frame()
+
+            if item is None:
                 continue
+
+            frame, arrival = item
+###
+
 
             state = telemetry.get_state()
           
-            frame = renderer.process(frame, state)
+# ##
+#             t0 = time.monotonic()
+# ##
 
-            cv2.imshow("raspi-hud", frame)
-            
-            if cv2.waitKey(1) == 27:      # ESC
-                break
+            frame = renderer.process(frame, state)
+# ##
+#             print(
+#                 f"Render {(time.monotonic() -t0) * 1000:.1f} ms"
+#             )
+# ##
+
+###
+#            age_ms = (time.monotonic() - arrival) * 1000
+
+#            print(f"Frame age before push = {age_ms:.1f} ms")
+###
+            pipeline.push_frame(frame)
 
     except KeyboardInterrupt:
         logger.info("Interrupted")
@@ -63,7 +82,6 @@ def main():
     finally:
         telemetry.stop()
         pipeline.stop()
-        cv2.destroyAllWindows()
         logger.info("Stopped")
 
 
