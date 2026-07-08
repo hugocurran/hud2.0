@@ -212,3 +212,13 @@ The renderer is responsible only for clipping and presentation. The geometry of 
           Attitude Frame
 
           +----------------+
+
+
+| AircraftState field                                 | Authoritative MAVLink message |
+| --------------------------------------------------- | ----------------------------- |
+| roll, pitch, heading                                | ATTITUDE                      |
+| armed, flight_mode                                  | HEARTBEAT                     |
+| airspeed, groundspeed, climb_rate                   | VFR_HUD                       |
+| altitude, relative_altitude                         | GLOBAL_POSITION_INT           |
+| gps_altitude, gps_fix_type, satellites_visible      | GPS_RAW_INT                   |
+| battery_voltage, battery_current, battery_remaining | SYS_STATUS                    |
