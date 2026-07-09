@@ -12,3 +12,5 @@ logs/
 mav.parm
 mav.tlog
 mav.tlog.raw
+test.mp4
+.gitignore
