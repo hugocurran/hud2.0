@@ -45,7 +45,7 @@ class GstPipeline:
             self.config.camera.fps,
         )
 
-        #self.timestamp = 0
+        self.timestamp = 0
 
         self.input_pipeline = Gst.Pipeline.new("raspi-hud")
         self._build_input_pipeline()
@@ -54,8 +54,6 @@ class GstPipeline:
         self.output_pipeline = Gst.Pipeline.new("hud-output")    
         self._build_output_pipeline()
         self._connect_output_bus()
-
-
 
         self.frame_queue = queue.Queue(maxsize=1)
 
@@ -67,6 +65,8 @@ class GstPipeline:
     def start(self):
 
         self.logger.info("Starting pipelines...")
+
+        self.timestamp = 0
 
         self.input_pipeline.set_state(Gst.State.PLAYING)
 
@@ -103,11 +103,11 @@ class GstPipeline:
 
         buffer.fill(0, data)
 
-        # buffer.pts = self.timestamp
-        # buffer.dts = self.timestamp
-        #buffer.duration = self.frame_duration
+        buffer.pts = self.timestamp
+        buffer.dts = self.timestamp
+        buffer.duration = self.frame_duration
 
-        #self.timestamp += self.frame_duration
+        self.timestamp += self.frame_duration
 
         self.appsrc.emit(
             "push-buffer",
@@ -176,8 +176,8 @@ class GstPipeline:
                 appsrc
                     name=source
                     is-live=true
+                    do-timestamp=false
                     format=time
-                    do-timestamp=true
                     block=false
                     caps=video/x-raw,format=BGR,width={width},height={height},framerate={fps}/1
                 !
@@ -190,17 +190,22 @@ class GstPipeline:
                 video/x-raw,format=NV12
                 !
                 x264enc 
-                    tune=zerolatency 
+                    tune=zerolatency
                     speed-preset=ultrafast
+                    bitrate=5000
+                    key-int-max=30
+                    rc-lookahead=0
                     byte-stream=true
                 !
-                h264parse
-                    config-interval=-1
+                mpegtsmux
+                    alignment=7
                 !
-                filesink
-                    location=test.h264
+                srtsink
+                    uri=srt://:9000
+                    mode=listener
+                    latency=50
+                    wait-for-connection=true
             """
-
             self.logger.info("Output pipeline:")
 
             self.logger.info(pipeline)
