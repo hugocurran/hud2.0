@@ -7,22 +7,10 @@ Contains no OpenCV drawing code.
 from __future__ import annotations
 
 from dataclasses import dataclass
-import math
 
 from hudstyle import HudStyle
-
-""" A point on the screen """
-@dataclass(frozen=True)
-class Point:
-    x: int
-    y: int
-
-""" A line segment on the screen """
-@dataclass
-class Line:
-    start: Point
-    end: Point
-
+from hudtypes import Point, Line, Triangle
+from hudtransform import HudTransform
 
 @dataclass
 class Horizon:
@@ -66,6 +54,8 @@ class RollScale:
 
     marks: list[RollMark]
 
+    pointer: Triangle
+
 @dataclass
 class RollMark:
 
@@ -81,32 +71,36 @@ class HudGeometry:
 
     def __init__(self, width: int, height: int):
 
+        self.transform = HudTransform(width, height)
+
         self.width = width
         self.height = height
 
         self.cx = width // 2
         self.cy = height // 2
 
+        
+
     def horizon(self, roll_deg: float, pitch_deg: float,) -> Horizon:
 
             pitch_px = pitch_deg * HudStyle.PITCH_SCALE
             L = HudStyle.HORIZON_LENGTH
 
-            centre = self._aircraft_to_screen(
+            centre = self.transform.aircraft_to_screen(
                 0,
                 0,
                 roll_deg,
                 pitch_px,
             )
 
-            left = self._aircraft_to_screen(
+            left = self.transform.aircraft_to_screen(
                 -L,
                 0,
                 roll_deg,
                 pitch_px,
             )
 
-            right = self._aircraft_to_screen(
+            right = self.transform.aircraft_to_screen(
                 L,
                 0,
                 roll_deg,
@@ -116,9 +110,8 @@ class HudGeometry:
             return Horizon(
                 line=Line(left, right),
                 centre=centre,
-            )
-
-    
+            ) 
+   
     def ladder_mark(
         self,
         pitch: int,
@@ -136,7 +129,7 @@ class HudGeometry:
         mark_y = pitch * HudStyle.PITCH_SCALE
         cap = HudStyle.PITCH_CAP_LENGTH / 2
 
-        centre_line = self._aircraft_line(
+        centre_line = self.transform.aircraft_line(
             -width,
             mark_y,
             width,
@@ -145,7 +138,7 @@ class HudGeometry:
             aircraft_pitch_px,
         )
 
-        left_cap = self._aircraft_line(
+        left_cap = self.transform.aircraft_line(
             -width,
             mark_y + cap,
             -width,
@@ -154,7 +147,7 @@ class HudGeometry:
             aircraft_pitch_px,
         )
 
-        right_cap = self._aircraft_line(
+        right_cap = self.transform.aircraft_line(
             width,
             mark_y + cap,
             width,
@@ -163,14 +156,14 @@ class HudGeometry:
             aircraft_pitch_px,
         )
 
-        left_label = self._aircraft_to_screen(
+        left_label = self.transform.aircraft_to_screen(
             -width - HudStyle.PITCH_LABEL_OFFSET,
             mark_y,
             roll_deg,
             aircraft_pitch_px,
         )
 
-        right_label = self._aircraft_to_screen(
+        right_label = self.transform.aircraft_to_screen(
             width + HudStyle.PITCH_LABEL_OFFSET,
             mark_y,
             roll_deg,
@@ -211,21 +204,21 @@ class HudGeometry:
                 else HudStyle.ROLL_MINOR_TICK
             )
 
-            outer = self._polar_point(
+            outer = self.transform.polar_point(
                 origin,
                 #angle,
                angle - roll_deg,
                 HudStyle.ROLL_RADIUS,
             )
 
-            inner = self._polar_point(
+            inner = self.transform.polar_point(
                 origin, 
                 angle - roll_deg,
                 #angle,
                 HudStyle.ROLL_RADIUS - length,
             )
 
-            label = self._polar_point(
+            label = self.transform.polar_point(
                 origin,
                 angle - roll_deg,
                 #angle,
@@ -245,122 +238,68 @@ class HudGeometry:
                     major = major,
             )
         )
+        
+        # Roll_scale pointer (a triangle)
+            
+        centre = horizon.centre
+        #radius = HudStyle.ROLL_RADIUS
 
-        return RollScale(
-            marks=marks,
-        )
-    
-    def roll_pointer(self):
-
-        size = HudStyle.ROLL_POINTER_SIZE
-
-        base_y = (
-            self.cy
-            - HudStyle.ROLL_RADIUS
-            + HudStyle.ROLL_POINTER_OFFSET
+        tip = self.transform.polar_point(
+            centre,
+            0,
+            HudStyle.ROLL_RADIUS,
         )
 
-        tip = (
-            self.cx,
-            base_y,
+        left = self.transform.polar_point(
+            centre,
+            -2,
+            HudStyle.ROLL_RADIUS - 14,
         )
 
-        left = (
-            self.cx - size,
-            base_y + size,
+        right = self.transform.polar_point(
+            centre,
+            2,
+            HudStyle.ROLL_RADIUS - 14,
         )
 
-        right = (
-            self.cx + size,
-            base_y + size,
-        )
-
-        return (
+        triangle = Triangle(
             tip,
             left,
             right,
         )
 
-    def _aircraft_to_screen(
-        self,
-        x: float,
-        y: float,
-        roll_deg: float,
-        aircraft_pitch_px: float,
-    ) -> Point:
-        """
-        Convert a point from aircraft coordinates to screen coordinates.
-
-        Aircraft coordinates:
-            +X = right wing
-            +Y = above the aircraft
-
-        Screen coordinates:
-            Origin at screen centre.
-            +X = right
-            +Y = down
-
-        The point is rotated by the aircraft roll and translated by the
-        current pitch before being converted to screen coordinates.
-        """
-        roll = math.radians(roll_deg)
-
-        c = math.cos(roll)
-        s = math.sin(roll)
-
-        xr = x * c - y * s
-        yr = x * s + y * c
-
-        return Point(
-            int(self.cx + xr),
-            int(self.cy + aircraft_pitch_px - yr),
-        ) 
-    
-    def _aircraft_line(
-        self,
-        x1: float,
-        y1: float,
-        x2: float,
-        y2: float,
-        roll_deg: float,
-        aircraft_pitch_px: float,
-        ) -> Line:
-            p1 = self._aircraft_to_screen(x1, y1, roll_deg, aircraft_pitch_px)
-            p2 = self._aircraft_to_screen(x2, y2, roll_deg, aircraft_pitch_px)
-            return Line(p1, p2)
-
-    def _polar_point(
-        self,
-        origin: Point,
-        angle_deg: float,
-        radius: float,
-    ) -> Point:   
-        
-        #angle = math.radians(angle_deg)
-        angle = math.radians(angle_deg)
-
-        sx = math.sin(angle)
-        cy = math.cos(angle)
-
-        # return Point(
-        #     int(self.cx + sx * radius),
-        #     int(self.cy - cy * radius),
-        # )
-        return Point (
-              int(origin.x + sx * radius),
-              int(origin.y - cy * radius)   ,
-        )
-        
-    def _rotation(self, roll_deg: float):
-
-        roll = math.radians(roll_deg)
-        # Convert from mathematical coordinates (Y increasing upwards)
-        # to OpenCV image coordinates (Y increasing downwards).
-        return (
-            math.cos(roll),
-            -math.sin(roll),
+        return RollScale(
+            marks=marks,
+            index=triangle,
         )
     
-    def _normal(self, dx: float, dy: float) -> tuple[float, float]:
-        return -dy, dx
-    
+    # def roll_pointer(self):
+
+    #     size = HudStyle.ROLL_POINTER_SIZE
+
+    #     base_y = (
+    #         self.cy
+    #         - HudStyle.ROLL_RADIUS
+    #         + HudStyle.ROLL_POINTER_OFFSET
+    #     )
+
+    #     tip = (
+    #         self.cx,
+    #         base_y,
+    #     )
+
+    #     left = (
+    #         self.cx - size,
+    #         base_y + size,
+    #     )
+
+    #     right = (
+    #         self.cx + size,
+    #         base_y + size,
+    #     )
+
+    #     return (
+    #         tip,
+    #         left,
+    #         right,
+    #     )

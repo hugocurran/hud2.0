@@ -13,7 +13,8 @@ import cv2
 import numpy as np
 
 from hudstyle import HudStyle
-from hudgeometry import HudGeometry, Point, Line
+from hudtypes import Point, Line
+from hudgeometry import HudGeometry
 from aircraft import AircraftState
 
 
@@ -47,7 +48,7 @@ class Renderer:
             or self.geometry.height != h
         ):
             self.geometry = HudGeometry(w, h)
-
+    
         #
         # Draw HUD
         #
@@ -57,8 +58,6 @@ class Renderer:
         self.draw_pitch_ladder(frame, state)
 
         self.draw_roll_scale(frame, state)
-
-        self.draw_roll_pointer(frame)
 
         self.draw_aircraft_symbol(frame)
 
@@ -81,7 +80,6 @@ class Renderer:
             frame,
             horizon.line,
         )
-
 
     # ---------------------------------------------------------
 
@@ -148,9 +146,9 @@ class Renderer:
         cx = w // 2
         cy = h // 2
 
-        gap = 12
-        wing = 32
-        stem = 14
+        gap = HudStyle.AIRCRAFT_GAP
+        wing = HudStyle.AIRCRAFT_WING
+        stem = HudStyle.AIRCRAFT_STEM
 
         #
         # left wing
@@ -160,7 +158,7 @@ class Renderer:
             frame,
             (cx - gap - wing, cy),
             (cx - gap, cy),
-            HudStyle.COLOUR,
+            HudStyle.AIRCRAFT_COLOUR,
             HudStyle.LINE_WIDTH,
         )
 
@@ -172,19 +170,17 @@ class Renderer:
             frame,
             (cx + gap, cy),
             (cx + gap + wing, cy),
-            HudStyle.COLOUR,
+            HudStyle.AIRCRAFT_COLOUR,
             HudStyle.LINE_WIDTH,
         )
-
         #
         # centre post
         #
-
         cv2.line(
             frame,
             (cx, cy - stem),
             (cx, cy + stem),
-            HudStyle.COLOUR,
+            HudStyle.AIRCRAFT_COLOUR,
             HudStyle.LINE_WIDTH,
         )
 
@@ -213,6 +209,7 @@ class Renderer:
             ),
 
             f"Mode     {state.flight_mode}",
+            #f"TXB {time.monotonic()}",
         ]
 
         for text in lines:
@@ -223,7 +220,7 @@ class Renderer:
                 (x, y),
                 HudStyle.FONT,
                 HudStyle.FONT_SCALE,
-                HudStyle.COLOUR,
+                HudStyle.GRID_COLOUR,
                 HudStyle.LINE_WIDTH,
                 cv2.LINE_AA,
             )
@@ -239,7 +236,7 @@ class Renderer:
             frame,
             (line.start.x, line.start.y),
             (line.end.x, line.end.y),
-            HudStyle.COLOUR,
+            HudStyle.GRID_COLOUR,
             HudStyle.LINE_WIDTH,
             cv2.LINE_AA,
         )
@@ -270,7 +267,7 @@ class Renderer:
             (x, position.y),
             HudStyle.FONT,
             HudStyle.PITCH_LABEL_FONT_SCALE,
-            HudStyle.COLOUR,
+            HudStyle.GRID_COLOUR,
             HudStyle.PITCH_LABEL_THICKNESS,
             cv2.LINE_AA,
         )        
@@ -283,7 +280,7 @@ class Renderer:
             (20, frame.shape[0] - 20),
             HudStyle.FONT,
             HudStyle.FONT_SCALE,
-            HudStyle.COLOUR,
+            HudStyle.GRID_COLOUR,
             HudStyle.LINE_WIDTH,
             cv2.LINE_AA,
         )
@@ -320,23 +317,31 @@ class Renderer:
                       (mark.label.x, mark.label.y),
                       HudStyle.FONT,
                       HudStyle.ROLL_LABEL_FONT_SCALE,
-                      HudStyle.COLOUR,
+                      HudStyle.GRID_COLOUR,
                       HudStyle.ROLL_LABEL_THICKNESS,
                       cv2.LINE_AA,
                  )
-                
-
-    def draw_roll_pointer(self, frame):
-
-        points = np.array(
-            self.geometry.roll_pointer(),
-            dtype=np.int32,
+        
+        self.draw_triangle(
+            frame, 
+            scale.pointer
         )
 
-        cv2.fillConvexPoly(
+    def draw_triangle(self, frame, triangle):
+
+        pts = np.array([
+            [triangle.a.x, triangle.a.y],
+            [triangle.b.x, triangle.b.y],
+            [triangle.c.x, triangle.c.y],
+        ], np.int32)
+
+        cv2.polylines(
             frame,
-            points,
-            HudStyle.COLOUR,
+            [pts],
+            True,
+            HudStyle.AIRCRAFT_COLOUR,
+            HudStyle.LINE_WIDTH,
             cv2.LINE_AA,
         )
+
 

@@ -206,6 +206,7 @@ class GstPipeline:
                     latency=50
                     wait-for-connection=true
             """
+
             self.logger.info("Output pipeline:")
 
             self.logger.info(pipeline)
@@ -251,20 +252,11 @@ class GstPipeline:
             try:
                 arrival = time.monotonic()
 
-                self.frame_queue.put_nowait(
-                    (frame, arrival)
-                )
+                self.frame_queue.put_nowait((frame, arrival))
 
-                #self.frame_queue.put_nowait(frame)
             except queue.Full:
-            # Drop the oldest frame and replace it
-                try:
-                    self.frame_queue.get_nowait()              
-                    #self.frame_queue.get_nowait()
-                except queue.Empty:
-                    pass
-                # Replace it with the newest frame
-                self.frame_queue.put_nowait(frame, arrival)
+                self.frame_queue.get_nowait()
+                self.frame_queue.put_nowait((frame, arrival))
 
         finally:
 

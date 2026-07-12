@@ -11,7 +11,8 @@ class HudStyle:
     # Colours
     # ------------------------------------------------------------
 
-    COLOUR = (0, 255, 0)
+    GRID_COLOUR = (0, 255, 0)
+    AIRCRAFT_COLOUR = (0, 0, 255)
 
     # ------------------------------------------------------------
     # Drawing
@@ -48,24 +49,28 @@ class HudStyle:
     # ------------------------------------------------------------
 
     AIRCRAFT_GAP = 12
-    AIRCRAFT_WING = 32
+    AIRCRAFT_WING = 40
     AIRCRAFT_STEM = 14
 
     # ------------------------------------------------------------
     # Roll Scale
     # ------------------------------------------------------------
 
-    ROLL_RADIUS = 220
+    ROLL_RADIUS = 255
 
     ROLL_MAJOR_TICK = 18
     ROLL_MINOR_TICK = 10
 
     ROLL_POINTER_SIZE = 14
+    ROLL_POINTER_HALF_WIDTH = 7
     ROLL_POINTER_OFFSET = 8
 
     ROLL_LABEL_FONT_SCALE = 0.5
     ROLL_LABEL_THICKNESS = 1 
     ROLL_LABEL_OFFSET = 20
+
+    ROLL_INDEX_WIDTH = 8
+    ROLL_INDEX_HEIGHT = 10
 
     # ------------------------------------------------------------
     # Status Overlay
