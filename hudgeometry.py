@@ -242,7 +242,6 @@ class HudGeometry:
         # Roll_scale pointer (a triangle)
             
         centre = horizon.centre
-        #radius = HudStyle.ROLL_RADIUS
 
         tip = self.transform.polar_point(
             centre,
@@ -270,36 +269,6 @@ class HudGeometry:
 
         return RollScale(
             marks=marks,
-            index=triangle,
+            pointer=triangle,
         )
     
-    # def roll_pointer(self):
-
-    #     size = HudStyle.ROLL_POINTER_SIZE
-
-    #     base_y = (
-    #         self.cy
-    #         - HudStyle.ROLL_RADIUS
-    #         + HudStyle.ROLL_POINTER_OFFSET
-    #     )
-
-    #     tip = (
-    #         self.cx,
-    #         base_y,
-    #     )
-
-    #     left = (
-    #         self.cx - size,
-    #         base_y + size,
-    #     )
-
-    #     right = (
-    #         self.cx + size,
-    #         base_y + size,
-    #     )
-
-    #     return (
-    #         tip,
-    #         left,
-    #         right,
-    #     )
