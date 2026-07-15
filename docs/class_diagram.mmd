@@ -1,0 +1,75 @@
+classDiagram
+    class Main {
+    }
+    class Config {
+    }
+    class CameraConfig {
+    }
+    class DisplayConfig {
+    }
+    class LoggingConfig {
+    }
+    class MavlinkConfig {
+    }
+    class GstPipeline {
+    }
+    class Renderer {
+    }
+    class TelemetryManager {
+    }
+    class TelemetrySource {
+    }
+    class MavlinkSource {
+    }
+    class SimulatorSource {
+    }
+    class HudGeometry {
+    }
+    class HudTransform {
+    }
+    class HudStyle {
+    }
+    class Point {
+    }
+    class Line {
+    }
+    class Triangle {
+    }
+    class AircraftState {
+    }
+
+    Main --> GstPipeline : uses
+    Main --> Renderer : uses
+    Main --> TelemetryManager : uses
+    Main --> MavlinkSource : uses
+    Main --> Config : loads
+
+    Config o-- CameraConfig
+    Config o-- DisplayConfig
+    Config o-- LoggingConfig
+    Config o-- MavlinkConfig
+
+    GstPipeline --> Config : config
+
+    Renderer --> HudGeometry : owns
+    Renderer --> HudStyle : uses
+    Renderer --> AircraftState : draws from
+
+    HudGeometry --> HudTransform : uses
+    HudGeometry --> HudStyle : uses
+    HudGeometry --> Point : creates
+    HudGeometry --> Line : creates
+    HudGeometry --> Triangle : creates
+
+    HudTransform --> Point : returns
+    HudTransform --> Line : returns
+    HudTransform --> Triangle : returns
+
+    TelemetryManager --> TelemetrySource : depends
+    TelemetryManager --> AircraftState : owns state
+
+    TelemetrySource <|-- MavlinkSource
+    TelemetrySource <|-- SimulatorSource
+
+    MavlinkSource --> AircraftState : updates
+    SimulatorSource --> AircraftState : updates

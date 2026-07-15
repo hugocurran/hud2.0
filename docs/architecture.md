@@ -1,224 +1,142 @@
-libcamerasrc
-      │
-      ▼
- appsink  ---> OpenCV callback ---> appsrc
-                                 │
-                                 ▼
-                             x264enc
-                                 │
-                                 ▼
-                              MPEG-TS
-                                 │
-                                 ▼
-                          SRT listener
+Purpose
+=======
 
+The objective of HUD 2.0 is to create a flexible framework for generating a Heads-Up Display (HUD) on the aircraft that is overlaid onto the the current camera output, before transmitting to a ground station via a video streaming protocol. The advantage of this approach, compared to the traditional approach of creating a HUD on a ground station, is that the information is always 'fresh' and there is no possibility of drift between the video feed and telemetry feed.
 
+Scope
+=====
 
-main.py
-      │
-      ▼
-Application
-      │
-      ▼
-Pipeline Manager
-      │
-      ├── Camera
-      ├── Encoder
-      ├── Network
-      └── Telemetry
-             │
-             ▼
-         HUD Renderer                   
+HUD 2.0 is a single Python3 package that has a number of external dependancies (which are installed via a setup.sh script). It is capable of direct interaction with a flight controller that generates MAVLink 2 messages, however is is normally connected to the flight controller via mavproxy. The configuration of the flight controller and mavproxy are outside the project scope. 
 
-                   main.py
-                     │
-     +---------------+---------------+
-     |                               |
-     |                               |
- Renderer                    GstPipeline
-     |                               |
-     |                       appsink callback
-     |                               |
-     |                       Queue(maxsize=1)
-     |                               |
-     +---------- get_frame() <--------+           
+Design Principles
+=================
 
+HUD 2.0 makes full use of Python3 (version 3.13) to create a coherent model that follows classical Object Oriented Programming (OOP) principles. Classes have a single responsibility, ownership of data is strictly managed and types are enforced.
 
+Current Implementation
+======================
 
-Version 0.2
+The code is divided into several modules:
 
-raspi-hud/
-│
-├── main.py
-├── config.py
-├── config.yaml
-├── gstpipeline.py
-├── renderer.py
-├── utils.py
-├── requirements.txt
-│
-├── telemetry.py      # placeholder
-├── hud.py            # placeholder
-├── streamer.py       # placeholder
-│
-└── README.md
+- main.py
+  - orchestrates startup
+  - creates `GstPipeline`, `Renderer`, `TelemetryManager`, `MavlinkSource`
 
-Responsibilities
+- config.py
+  - defines `Config` and nested config dataclasses
 
-main.py
+- gstpipeline.py
+  - camera input + output pipeline
+  - manages frames and GStreamer appsrc/appsink
 
-Owns the application
-Starts/stops components
-Main processing loop
-Keyboard handling
+- renderer.py
+  - draws HUD overlays using `HudGeometry` and `HudStyle`
 
-gstpipeline.py
+- telemetrymanager.py
+  - owns aircraft state and refresh loop
+  - delegates updates to `TelemetrySource`
 
-Camera capture only
-libcamerasrc
-appsink
-Queue latest frame
-No GUI
-No HUD
-No streaming
+- telemetrysource.py
+  - abstract telemetry provider interface
+  - implemented by mavlinksource.py and simulatorsource.py
 
-renderer.py
+- hudgeometry.py
+  - generates HUD geometry data from aircraft attitude
 
-Draws on frames
-Initially just a frame counter
-Later: artificial horizon, altitude, battery, compass, etc.
+- hudtransform.py
+  - converts aircraft-space coordinates into screen-space
 
-config.py
+- hudtypes.py
+  - basic primitive types: `Point`, `Line`, `Triangle`
 
-Reads YAML
-Returns a strongly typed configuration object
+Future Enhancements
+===================
+1. Expand the model to allow the user (via config.yaml) to specify the platform in use
+    - Allow platform-specific requirements to be managed in one place
+    - Move the system from a Raspi-focused implementation to a more generic basis that supports other platforms
+    - Support a more varied list of cameras
 
-HUD Design
+2. Allow the use of alternative libraries for interaction with MAVLink. Currently the system is tied to pymavlink, but in the future MAVROS may be used.
 
-          World
+3. Integrate the use of a simulated camera to support the use of HUD 2.0 as a training aid.
 
-            ^
-            |
-------------+------------ Horizon
-            |
-            |
+Related Documents
+=================
 
-             |
-             | rotate (roll)
-             |
-             V
+```mermaid
+classDiagram
+    class Main {
+    }
+    class Config {
+    }
+    class CameraConfig {
+    }
+    class DisplayConfig {
+    }
+    class LoggingConfig {
+    }
+    class MavlinkConfig {
+    }
+    class GstPipeline {
+    }
+    class Renderer {
+    }
+    class TelemetryManager {
+    }
+    class TelemetrySource {
+    }
+    class MavlinkSource {
+    }
+    class SimulatorSource {
+    }
+    class HudGeometry {
+    }
+    class HudTransform {
+    }
+    class HudStyle {
+    }
+    class Point {
+    }
+    class Line {
+    }
+    class Triangle {
+    }
+    class AircraftState {
+    }
 
-        Screen Space
+    Main --> GstPipeline : uses
+    Main --> Renderer : uses
+    Main --> TelemetryManager : uses
+    Main --> MavlinkSource : uses
+    Main --> Config : loads
 
-        +----------------------+
-        |                      |
-        |         +            |
-        |                      |
-        +----------------------+
+    Config o-- CameraConfig
+    Config o-- DisplayConfig
+    Config o-- LoggingConfig
+    Config o-- MavlinkConfig
 
+    GstPipeline --> Config : config
 
+    Renderer --> HudGeometry : owns
+    Renderer --> HudStyle : uses
+    Renderer --> AircraftState : draws from
 
+    HudGeometry --> HudTransform : uses
+    HudGeometry --> HudStyle : uses
+    HudGeometry --> Point : creates
+    HudGeometry --> Line : creates
+    HudGeometry --> Triangle : creates
 
-                            Main Thread
-                    ===========
-Camera --> GstPipeline --> Renderer
-                           ▲
-                           │
-                    get_state()
-                           │
-                    TelemetryManager
-                     (owns state)
-                           ▲
-                           │ Lock
-                           ▼
-                 Telemetry Worker Thread
-                           │
-                    update_state()
-                           │
-                    MavlinkSource
-                           │
-                       Pixhawk
+    HudTransform --> Point : returns
+    HudTransform --> Line : returns
+    HudTransform --> Triangle : returns
 
+    TelemetryManager --> TelemetrySource : depends
+    TelemetryManager --> AircraftState : owns state
 
+    TelemetrySource <|-- MavlinkSource
+    TelemetrySource <|-- SimulatorSource
 
-
-"stuff built on an angle uses polar coordinates, stuff that is basically straight lines uses cartesian."
-
-Aircraft geometry
-
-Cartesian
-----------
-Point
-Line
-
-Polar
------
-Arc point
-Arc line (perhaps)
-                       
-
-
-
-HUD Architecture
-================
-
-The HUD consists of two independent visual frames.
-
-Static Frame
-
-The static frame is fixed relative to the display.
-
-It contains:
-
-aircraft symbol
-wings
-roll pointer
-
-These never move.
-
-Attitude Frame
-
-The attitude frame represents the outside world.
-
-It contains:
-
-horizon
-pitch ladder
-roll scale
-
-These elements are rigidly related and move as a single geometric object.
-
-Aircraft roll rotates the entire frame.
-
-Aircraft pitch translates the entire frame vertically.
-
-The renderer is responsible only for clipping and presentation. The geometry of the attitude frame is calculated by HudGeometry.
-                 HUD
-
-          +----------------+
-
-          Static Frame
-
-          ▲
-     -----+-----
-          |
-
-============================   Horizon
-  10                 10
-============================   Pitch Ladder
-
-      Roll Scale Arc
-
-          Attitude Frame
-
-          +----------------+
-
-
-| AircraftState field                                 | Authoritative MAVLink message |
-| --------------------------------------------------- | ----------------------------- |
-| roll, pitch, heading                                | ATTITUDE                      |
-| armed, flight_mode                                  | HEARTBEAT                     |
-| airspeed, groundspeed, climb_rate                   | VFR_HUD                       |
-| altitude, relative_altitude                         | GLOBAL_POSITION_INT           |
-| gps_altitude, gps_fix_type, satellites_visible      | GPS_RAW_INT                   |
-| battery_voltage, battery_current, battery_remaining | SYS_STATUS                    |
+    MavlinkSource --> AircraftState : updates
+    SimulatorSource --> AircraftState : updates
+```
