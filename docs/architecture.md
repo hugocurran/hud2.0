@@ -18,6 +18,17 @@ Design Principles
 
 HUD 2.0 makes full use of Python3 (version 3.13) to create a coherent model that follows classical Object Oriented Programming (OOP) principles. Classes have a single responsibility, ownership of data is strictly managed and types are enforced, the open-closed principle is widely implemented.
 
+Timing is critical to this application:
+  - A new frame arrives every ~33milliseconds (assuming a framerate of 30 fps)
+  - The maximum budget for drawing the HUD and placing the updated frame in the output is therefore ~30milliseconds
+  - Telemetry data arrives at a variable rate, this is asynchronous compared to the video data. The design should isolate the telemetry update rate from the video timing.
+
+The HUD output should be capable of expansion (adding new features) or minimisation (not displaying unwanted features). The minimum feature set consists of a horizon line (that should move in relation to current aircraft pitch and roll); a fixed representation of the aircraft (body and wings); an indication of heading, altitude (AGL) and airspeed. Building on top of this minimum feature set it is desirable to show graphically aircraft pitch (a pitch ladder) and aircraft roll (a roll scale) - both of these should be synchronised to the horizon line.
+
+The design should be capable of expansion to further features, such as: RSSI, glide slope, GPS status, compass tape, graphical presentation of height and speed. Ideally, it should be possible for the pilot to change the HUD configuration via a YAML file, potentially whilst in flight.
+
+Video processing (such as the use of hardware encoders) should be designed to allow multi-platform support.
+
 Current Implementation
 ======================
 
@@ -56,10 +67,10 @@ The code is divided into several modules:
 
 This produces three main sub-systems:
   - HUD Rendering
-    The components required to define and draw the HUD on a frame-by-frame basis using the current telemetry information. The HUD is drawn at the same rate as the video framerate (e.g. 30fps), however the telemetry data arrives asynchronously and so the 'latest' information is used.
+    The components required to define and draw the HUD on a frame-by-frame basis using the current telemetry information which is presented as aircraft state. The HUD is drawn at the same rate as the video framerate (e.g. 30fps), however the telemetry data arrives asynchronously and so the 'latest' information is used.
 
   - Telemetry
-    The components required to collect and update the aircraft state. It is an objective to support alternative Mavlink2 telemetry sources (pymavlink, MAVROS, etc.) so the details of the telemetry provider are abstracted away from a telemetry manager. The telemetry manager owns the aircraft state object which is shared with the HUD rendering sub-system and provides the interface between the two sub-systems. As a result of the asynchronous nature of the telemetry data stream the actual telemetry collection operates within its own thread. The abstraction of an aircraft state object allows data to be collected and consumed without a nead to wait for a telemetry update.
+    The components required to collect and update the aircraft state. It is an objective to support alternative Mavlink2 telemetry sources (pymavlink, MAVROS, etc.) so the details of the telemetry provider are abstracted away from a telemetry manager. The telemetry manager owns the aircraft state object which is shared with the HUD rendering sub-system and provides the interface between the two sub-systems. As a result of the asynchronous nature of the telemetry data stream the actual telemetry collection operates within its own thread. The abstraction of an aircraft state object allows data to be collected and consumed without a need to wait for a telemetry update.
 
   - Video Pipelines
     Video pipelines are provided by a single class that creates separate Gstreamer input and output pipelines. There is not a direct connection between the pipelines and the HUD renderer; collection of a video frame, passing to the renderer, subsequent collection and transmission via the output pipeline is orchestrated by the main.py loop. The GstPipeline class handles all Gstreamer interaction, including error management and timing.

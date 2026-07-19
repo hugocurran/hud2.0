@@ -13,7 +13,7 @@ The collection of a current camera image and sending the modified (with HUD) ima
 
 Design Principles
 =================
-In pursuit of the overall philosophy outlined in Architecture this sub-system is designed to provide a clear separation between the different activities. The renderer is solely responsible for actully drawing the HUD onto the frame; hudgeometry is responsible for working out what information needs to be displayed and where; hudtransform provides the integration between the two by handling the translation between the aircraft coordinate system and that use by cv2/renderer.
+In pursuit of the overall philosophy outlined in Architecture this sub-system is designed to provide a clear separation between the different activities. The renderer is solely responsible for actually drawing the HUD onto the frame; hudgeometry is responsible for working out what information needs to be displayed and where; hudtransform provides the integration between the two by handling the translation between the aircraft coordinate system and that use by cv2/renderer.
 
 Renderer has access to the Aircraft object, which contains the current aircraft state - updated by the telemetry sub-system. It passes this state to HudGeometry in its request for the drawing parameters for each object in the HUD (e.g. horizon line, pitch ladder). HudGeometry provides the drawing paramaters via HudTransform, which outputs 'screen' coordinates that are compatible with the cv2 model.
 
