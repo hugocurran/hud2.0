@@ -11,7 +11,7 @@ from config import load_config
 from gstpipeline import GstPipeline
 from renderer import Renderer
 from telemetrymanager import TelemetryManager
-from util import get_logger
+from logmanager import get_logger
 from mavlinksource import MavlinkSource
 
 

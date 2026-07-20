@@ -10,7 +10,7 @@ from pymavlink import mavutil
 from telemetrysource import TelemetrySource
 from telemetry import TelemetryState
 from collections.abc import Callable
-from util import get_logger
+from logmanager import get_logger
 from config import load_config
 from aircraft import AircraftState
 
