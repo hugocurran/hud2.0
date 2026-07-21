@@ -21,7 +21,7 @@ def main():
 
     config = load_config()
 
-    logmanager.initialise()
+    logmanager.initialise(config.logging.level)
     logger = logmanager.get_logger("application")
 
     pipeline = GstPipeline(config)

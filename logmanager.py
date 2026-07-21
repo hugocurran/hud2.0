@@ -16,7 +16,7 @@ LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)-20s %(message)s"
 
 _initialised = False
 
-def initialise(level: str = "INFO") -> None:
+def initialise(level: str) -> None:
     """Initialise the HUD logging system."""
 
     global _initialised
@@ -26,7 +26,12 @@ def initialise(level: str = "INFO") -> None:
     
     root = logging.getLogger(LOGGER_ROOT)
 
-    root.setLevel(level)
+    # Quick sanity check to make sure logger level is recognised
+    loglevel = getattr(logging, level.upper(), None)
+    if not isinstance(loglevel, int):
+        raise ValueError(loglevel)
+
+    root.setLevel(loglevel)
 
     root.propagate = False
 

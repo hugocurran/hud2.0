@@ -8,7 +8,7 @@ display:
   window_name: raspi-hud
 
 logging:
-  level: DEBUG
+  level: INFO
 
 mavlink:
   connection: udp:0.0.0.0:14550
