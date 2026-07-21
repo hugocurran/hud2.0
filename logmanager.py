@@ -1,29 +1,72 @@
 """
-Logging helpers.
+Application logging manager.
+
+This module provides centralised configuration of the Python logging
+framework together with helper functions for obtaining subsystem loggers.
+
+Logging is configured once during application start-up and all subsystem
+loggers inherit the root configuration.
 """
 
 import logging
 import sys
 
+LOGGER_ROOT = "hud"
+LOG_FORMAT = "%(asctime)s %(levelname)-8s %(name)-20s %(message)s"
 
-def get_logger(name: str, level: str = "INFO") -> logging.Logger:
+_initialised = False
 
-    logger = logging.getLogger(name)
+def initialise(level: str = "INFO") -> None:
+    """Initialise the HUD logging system."""
 
-    if logger.handlers:
-        return logger
+    global _initialised
+   
+    if _initialised:
+        return
+    
+    root = logging.getLogger(LOGGER_ROOT)
 
-    logger.setLevel(level)
+    root.setLevel(level)
 
-    formatter = logging.Formatter(
-        "%(asctime)s %(levelname)-8s %(message)s"
-    )
+    root.propagate = False
+
+    formatter = logging.Formatter(LOG_FORMAT)
 
     handler = logging.StreamHandler(sys.stdout)
 
     handler.setFormatter(formatter)
 
-    logger.addHandler(handler)
+    root.addHandler(handler)
 
-    return logger
+    _initialised = True
+
+
+def get_logger(subsystem: str) -> logging.Logger:
+    """Return a logger for a HUD subsystem."""
+   
+    return logging.getLogger(f"{LOGGER_ROOT}.{subsystem}")
+
+
+
+
+# def get_logger(name: str, level: str = "INFO") -> logging.Logger:
+
+#     logger = logging.getLogger(name)
+
+#     if logger.handlers:
+#         return logger
+
+#     logger.setLevel(level)
+
+#     formatter = logging.Formatter(
+#         "%(asctime)s %(levelname)-8s %(message)s"
+#     )
+
+#     handler = logging.StreamHandler(sys.stdout)
+
+#     handler.setFormatter(formatter)
+
+#     logger.addHandler(handler)
+
+#     return logger
 

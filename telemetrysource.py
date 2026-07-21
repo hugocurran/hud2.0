@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from abc import ABC, abstractmethod
 
-from telemetry import TelemetryState
+from aircraft import AircraftState
 
 
 class TelemetrySource(ABC):
@@ -23,7 +23,7 @@ class TelemetrySource(ABC):
     @abstractmethod
     def update_state(
         self,
-        state: TelemetryState,
+        state: AircraftState,
     ) -> None:
         """
         Update the supplied telemetry state.

@@ -8,7 +8,6 @@ import time
 
 from pymavlink import mavutil
 from telemetrysource import TelemetrySource
-from telemetry import TelemetryState
 from collections.abc import Callable
 from logmanager import get_logger
 from config import load_config
@@ -24,12 +23,9 @@ class MavlinkSource(TelemetrySource):
 
         #self.aircraft_state = AircraftState()
 
-        self.logger = get_logger(
-            "mavlink",
-            config.logging.level,
-        )
+        self.logger = get_logger("telemetry")
 
-        print(f"Connecting to {connection}...")
+        self.logger.info(f"Connecting to MAVLink {connection}...")
 
         self.master = mavutil.mavlink_connection(
             connection,
@@ -48,7 +44,7 @@ class MavlinkSource(TelemetrySource):
         )
 
 
-        print(
+        self.logger.info(
             f"Heartbeat received "
             f"(system={self.master.target_system}, "
             f"component={self.master.target_component})"
@@ -57,7 +53,7 @@ class MavlinkSource(TelemetrySource):
         # Despatch table for MAVLink message types to handler functions
         self._handlers: dict[
             str,
-            Callable[[object, TelemetryState], None],
+            Callable[[object, AircraftState], None],
         ] = {
             "ATTITUDE": self._handle_attitude,
             "HEARTBEAT": self._handle_heartbeat,

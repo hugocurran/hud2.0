@@ -7,15 +7,12 @@ Application entry point.
 import faulthandler
 import signal
 
+import logmanager
 from config import load_config
 from gstpipeline import GstPipeline
 from renderer import Renderer
 from telemetrymanager import TelemetryManager
-from logmanager import get_logger
 from mavlinksource import MavlinkSource
-
-
-logger = get_logger(__name__)
 
 
 def main():
@@ -23,6 +20,9 @@ def main():
     faulthandler.register(signal.SIGUSR1)
 
     config = load_config()
+
+    logmanager.initialise()
+    logger = logmanager.get_logger("application")
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
@@ -34,8 +34,9 @@ def main():
 
     telemetry = TelemetryManager(source)
     telemetry.start()
-    pipeline.start()
+    logger.info("Telemetry started")
 
+    pipeline.start()
     logger.info("Pipeline started")
     
     try:

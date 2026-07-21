@@ -10,7 +10,7 @@ from __future__ import annotations
 import threading
 import time
 
-
+import logmanager
 from aircraft import AircraftState
 from telemetrysource import TelemetrySource
 from dataclasses import replace
@@ -25,6 +25,9 @@ class TelemetryManager:
         self._lock = threading.Lock()
         self._running = False
         self._thread: threading.Thread | None = None
+        
+        self.logger = logmanager.get_logger("Telemetry")
+        self.logger.info("Telemetry initialised")
 
     def start(self) -> None:
 
@@ -35,6 +38,8 @@ class TelemetryManager:
             daemon=True,
         )
 
+        self.logger.info("Telemetry started")
+
         self._thread.start()
 
     def stop(self) -> None:
@@ -42,6 +47,8 @@ class TelemetryManager:
 
         if self._thread is not None:
             self._thread.join()
+
+        self.logger("Telemetry stopped")
 
         self._source.stop()
 

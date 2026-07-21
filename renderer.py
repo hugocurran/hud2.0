@@ -12,6 +12,7 @@ from __future__ import annotations
 import cv2
 import numpy as np
 
+import logmanager
 from hudstyle import HudStyle
 from hudtypes import Point, Line
 from hudgeometry import HudGeometry
@@ -28,6 +29,9 @@ class Renderer:
         self.geometry = None
 
         self.frame_counter = 0
+
+        self.logger = logmanager.get_logger("render")
+        self.logger.info("Renderer initialised")
 
 
     # ---------------------------------------------------------

@@ -19,7 +19,7 @@ gi.require_version("GLib", "2.0")
 from gi.repository import Gst, GLib
 
 from config import Config
-from logmanager import get_logger
+import logmanager
 
 
 Gst.init(None)
@@ -31,7 +31,7 @@ class GstPipeline:
 
         self.config = config
 
-        self.logger = get_logger("pipeline", config.logging.level)
+        self.logger = logmanager.get_logger("video")
 
         self.frame_count = 0
 
