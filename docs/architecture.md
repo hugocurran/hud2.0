@@ -16,6 +16,8 @@ The configuration of the flight controller and mavproxy are outside the project 
 
 HUD 2.0 makes full use of Python3 (version 3.13) to create a coherent model that follows classical Object Oriented Programming (OOP) principles. Classes have a single responsibility, ownership of data is strictly managed and types are enforced, the open-closed principle is widely implemented.
 
+The application shall isolate hardware-specific functionality within dedicated subsystems. The renderer, telemetry processing, overlay generation, logging and configuration shall remain independent of the execution platform. Platform-specific implementations are responsible for adapting hardware capabilities to a common application interface.
+
 ### Timing
 
 Timing is critical to this application:
