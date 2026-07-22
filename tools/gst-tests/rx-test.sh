@@ -21,10 +21,11 @@ build_pipeline()
 {
     cat <<EOF
 srtsrc uri=srt://${PI_HOST}:${SRT_PORT}
+    latency=50
 ! tsdemux
 ! h264parse
 ! avdec_h264
-! autovideosink
+! autovideosink sync=false
 EOF
 }
 
