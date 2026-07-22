@@ -2,6 +2,8 @@
 
 # SRT
 #  ↓
+# tsparse
+#  ↓
 # tsdemux
 #  ↓
 # h264parse
@@ -9,6 +11,10 @@
 # decoder
 #  ↓
 # autovideosink
+
+# What changed?
+#   0.1 Add sync=false to autovideosink
+#   0.2 Added tsparse before tsdemux
 
 set -e
 
@@ -20,18 +26,26 @@ trap 'echo; echo "Receiver stopped"; exit 0' INT
 build_pipeline()
 {
     cat <<EOF
-srtsrc uri=srt://${PI_HOST}:${SRT_PORT}
+srtsrc 
+    uri=srt://${PI_HOST}:${SRT_PORT}
     latency=50
+! tsparse
 ! tsdemux
 ! h264parse
 ! avdec_h264
-! autovideosink sync=false
+! autovideosink 
+    sync=false
 EOF
 }
 
 echo "======================================="
-echo "HUD GStreamer Receiver"
+echo "HUD Video Test Harness"
+echo "Receiver Test"
+echo "Version 0.2"
+echo "TX : ${TX_VER}"
+echo "RX : ${RX_VER}"
 echo "======================================="
+echo
 echo "Host : ${PI_HOST}"
 echo "Port : ${SRT_PORT}"
 

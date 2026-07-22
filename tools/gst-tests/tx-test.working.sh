@@ -6,19 +6,14 @@
 #  ↓
 # videoconvert
 #  ↓
-# v4l2h264enc
+# x264enc
 #  ↓
 # mpegtsmux
 #  ↓
 # srtsink
 
-# What changed?
-#   0.1 using x264enc (software encoder)
-#   0.2 Using v4l2h264enc (hardware encoder)
-
 
 set -e
-#set -x
 trap 'echo; echo "Transmitter stopped"; exit 0' INT
 
 source env-common.sh
@@ -27,16 +22,30 @@ source env-pi.sh
 build_pipeline()
 {
     cat <<EOF
-libcamerasrc 
-! capsfilter caps=video/x-raw,width=1280,height=720,format=NV12,interlace-mode=progressive 
-! v4l2h264enc 
-    extra-controls="controls,repeat_sequence_header=1" 
-! video/x-h264, level=(string)4 
-! h264parse 
-! mpegtsmux 
-    alignment=7 
-! queue
-! srtsink
+libcamerasrc
+!
+video/x-raw,width=${WIDTH},height=${HEIGHT},framerate=${FPS}/1
+!
+queue 
+    max-size-buffers=1 
+    leaky=downstream
+!
+videoconvert
+!
+video/x-raw,format=NV12
+!
+x264enc 
+    tune=zerolatency
+    speed-preset=ultrafast
+    bitrate=5000
+    key-int-max=30
+    rc-lookahead=0
+    byte-stream=true
+!
+mpegtsmux
+    alignment=7
+!
+srtsink
     uri=srt://:9000
     mode=listener
     latency=50
@@ -47,7 +56,7 @@ EOF
 echo "======================================="
 echo "HUD Video Test Harness"
 echo "Sender Test"
-echo "Version 0.2"
+echo "Version 0.1"
 echo "TX : ${TX_VER}"
 echo "RX : ${RX_VER}"
 echo "======================================="
