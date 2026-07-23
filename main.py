@@ -6,8 +6,10 @@ Application entry point.
 
 import faulthandler
 import signal
+import argparse
 
 import logmanager
+from performance import PerformanceMonitor, NullPerformance
 from config import load_config
 from gstpipeline import GstPipeline
 from renderer import Renderer
@@ -19,10 +21,21 @@ def main():
 
     faulthandler.register(signal.SIGUSR1)
 
+    args = _parse_arguments()
+
     config = load_config()
+
+    #### overide deaults here
+    ###
 
     logmanager.initialise(config.logging.level)
     logger = logmanager.get_logger("application")
+
+    if args.performance:
+        perf = PerformanceMonitor(logger)
+    else:
+        perf = NullPerformance()
+
 
     pipeline = GstPipeline(config)
     renderer = Renderer()
@@ -42,40 +55,18 @@ def main():
     try:
         while True:
 
-            # frame = pipeline.get_frame()
+            frame = pipeline.get_frame()
 
-            # if frame is None:
-            #     continue
-
-###
-            item = pipeline.get_frame()
-
-            if item is None:
+            if frame is None:
                 continue
 
-            frame, arrival = item
-###
-
-
             state = telemetry.get_state()
-          
-# ##
-#             t0 = time.monotonic()
-# ##
 
-            frame = renderer.process(frame, state)
-# ##
-#             print(
-#                 f"Render {(time.monotonic() -t0) * 1000:.1f} ms"
-#             )
-# ##
+            with perf.timer("renderer.process"):
+                frame = renderer.process(frame, state)
 
-###
-#            age_ms = (time.monotonic() - arrival) * 1000
-
-#            print(f"Frame age before push = {age_ms:.1f} ms")
-###
-            pipeline.push_frame(frame)
+            with perf.timer("pipeline.push"):
+                pipeline.push_frame(frame)
 
     except KeyboardInterrupt:
         logger.info("Interrupted")
@@ -83,7 +74,21 @@ def main():
     finally:
         telemetry.stop()
         pipeline.stop()
+        
         logger.info("Stopped")
+
+def _parse_arguments():
+    parser = argparse.ArgumentParser(
+        description="Raspberry Pi HUD",
+    )
+
+    parser.add_argument(
+        "--performance",
+        action="store_true",
+        help="Enable performance monitoring",
+    )
+
+    return parser.parse_args()
 
 
 if __name__ == "__main__":

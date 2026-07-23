@@ -80,7 +80,6 @@ This produces three main sub-systems:
 - Video Pipelines
     Video pipelines are provided by a single class that creates separate Gstreamer input and output pipelines. There is not a direct connection between the pipelines and the HUD renderer; collection of a video frame, passing to the renderer, subsequent collection and transmission via the output pipeline is orchestrated by the main.py loop. The GstPipeline class handles all Gstreamer interaction, including error management and timing.
 
-    The renderer produces uncompressed BGR frames. The video subsystem is responsible for colour-space conversion, encoding and network transport. The renderer is therefore independent of the chosen encoder and transport implementation.
 
 This class diagram shows the relationship between the components:
 
@@ -161,6 +160,23 @@ classDiagram
     MavlinkSource --> AircraftState : updates
     SimulatorSource --> AircraftState : updates
 ```
+
+### Video Sub-system
+The video subsystem is contained in gstpipeline.py.
+
+Maximum use is made of Gstreamer to not only manage the pipelines but also create and manage the appsink/appsrc elements that are the (indirect) interface with the renderer. The renderer knows nothing about the video pipelines - it simply receives a frame (numpy array), updates it and then passes the result to be processed elsewhere.
+
+The processing of the frames is performed by the gstreamer pipeline using the native appsrc and appsink modules.
+
+#### Input Pipeline
+
+
+
+
+#### Output Pipeline
+
+
+The renderer produces uncompressed BGR frames. The video subsystem is responsible for colour-space conversion, encoding and network transport. The renderer is therefore independent of the chosen encoder and transport implementation.
 
 ## Future Enhancements
 

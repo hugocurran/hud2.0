@@ -15,7 +15,6 @@
 # What changed?
 #   0.1 using x264enc (software encoder)
 #   0.2 Using v4l2h264enc (hardware encoder)
-#   0.3 
 
 
 set -e
@@ -25,16 +24,11 @@ trap 'echo; echo "Transmitter stopped"; exit 0' INT
 source env-common.sh
 source env-pi.sh
 
-LOGDIR=logs
-STAMP=$(date +%Y%m%d-%H%M%S)
-
-
 build_pipeline()
 {
     cat <<EOF
 libcamerasrc 
 ! capsfilter caps=video/x-raw,width=1280,height=720,format=NV12,interlace-mode=progressive 
-! timeoverlay
 ! v4l2h264enc 
     extra-controls="controls,repeat_sequence_header=1" 
 ! video/x-h264, level=(string)4 
@@ -53,7 +47,7 @@ EOF
 echo "======================================="
 echo "HUD Video Test Harness"
 echo "Sender Test"
-echo "Version 0.3"
+echo "Version 0.2"
 echo "TX : ${TX_VER}"
 echo "RX : ${RX_VER}"
 echo "======================================="
@@ -67,14 +61,7 @@ echo "Pipeline:"
 echo "$PIPELINE"
 echo
 
-# setup instrumentation
-export GST_TRACERS="rusage;stats"
-export GST_DEBUG_FILE="$LOGDIR/trace.log"
-export GST_DEBUG="GST_TRACER:7"
-
-# Start sender
-#gst-launch-1.0 -v $PIPELINE 2> "$LOGDIR/$STAMP.log"
+# Start receiver
 gst-launch-1.0 -v $PIPELINE
-
 
 
