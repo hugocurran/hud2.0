@@ -48,7 +48,7 @@ class TelemetryManager:
         if self._thread is not None:
             self._thread.join()
 
-        self.logger("Telemetry stopped")
+        self.logger.info("Telemetry stopped")
 
         self._source.stop()
 

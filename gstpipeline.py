@@ -156,14 +156,14 @@ class GstPipeline:
 
             Receives rendered BGR frames from the application via appsrc.
 
-            Initially terminates at autovideosink for latency testing.
+            Converts to NV12.
 
-            This sink will later become:
+            Passes output to either a software encoder (x264enc) or a hardware
+            encoder (v4l2h264enc).
 
-                appsrc
-                -> encoder
-                -> MPEG-TS
-                -> SRT
+            Passes to the tmux and sends via SRT - which is running in listener
+            mode.
+
             """
         
             width = self.config.camera.width
@@ -172,40 +172,78 @@ class GstPipeline:
 
             self.logger.info("Building H.264 output pipeline")
 
-            pipeline = f"""
-                appsrc
-                    name=source
-                    is-live=true
-                    do-timestamp=false
-                    format=time
-                    block=false
-                    caps=video/x-raw,format=BGR,width={width},height={height},framerate={fps}/1
-                !
-                queue
-                    max-size-buffers=1
-                    leaky=downstream
-                !
-                videoconvert
-                !
-                video/x-raw,format=NV12
-                !
-                x264enc 
-                    tune=zerolatency
-                    speed-preset=ultrafast
-                    bitrate=5000
-                    key-int-max=30
-                    rc-lookahead=0
-                    byte-stream=true
-                !
-                mpegtsmux
-                    alignment=7
-                !
-                srtsink
-                    uri=srt://:9000
-                    mode=listener
-                    latency=50
-                    wait-for-connection=true
-            """
+            if self.config.video.encoder == "software":
+
+                pipeline = f"""
+                    appsrc
+                        name=source
+                        is-live=true
+                        do-timestamp=false
+                        format=time
+                        block=false
+                        caps=video/x-raw,format=BGR,width={width},height={height},framerate={fps}/1
+                    !
+                    queue
+                        max-size-buffers=1
+                        leaky=downstream
+                    !
+                    videoconvert
+                    !
+                    video/x-raw,format=NV12
+                    !
+                    x264enc 
+                        tune=zerolatency
+                        speed-preset=ultrafast
+                        bitrate=5000
+                        key-int-max=30
+                        rc-lookahead=0
+                        byte-stream=true
+                    !
+                    mpegtsmux
+                        alignment=7
+                    !
+                    srtsink
+                        uri=srt://:9000
+                        mode=listener
+                        latency=50
+                        wait-for-connection=true
+                """
+            else:
+
+                pipeline = f"""
+                    appsrc
+                        name=source
+                        is-live=true
+                        do-timestamp=false
+                        format=time
+                        block=false
+                        caps=video/x-raw,format=BGR,width={width},height={height},framerate={fps}/1
+                    !
+                    queue
+                        max-size-buffers=1
+                        leaky=downstream
+                    !
+                    videoconvert
+                    !
+                    video/x-raw,format=NV12
+                    !
+                    v4l2h264enc
+                        extra-controls="controls,repeat_sequence_header=1"
+                    !
+                    video/x-h264,
+                        level=(string)4
+                    !
+                    h264parse
+                    !
+                    mpegtsmux
+                        alignment=7
+                    !
+                    srtsink
+                        uri=srt://:9000
+                        mode=listener
+                        latency=50
+                        wait-for-connection=true
+                """
 
             self.logger.info("Output pipeline:")
 

@@ -80,6 +80,8 @@ This produces three main sub-systems:
 - Video Pipelines
     Video pipelines are provided by a single class that creates separate Gstreamer input and output pipelines. There is not a direct connection between the pipelines and the HUD renderer; collection of a video frame, passing to the renderer, subsequent collection and transmission via the output pipeline is orchestrated by the main.py loop. The GstPipeline class handles all Gstreamer interaction, including error management and timing.
 
+    The renderer produces uncompressed BGR frames. The video subsystem is responsible for colour-space conversion, encoding and network transport. The renderer is therefore independent of the chosen encoder and transport implementation.
+
 This class diagram shows the relationship between the components:
 
 ```mermaid
